@@ -66,11 +66,6 @@ if (!isset($_SESSION['user_id'])) {
                 <p class="text-slate-500 text-sm mt-1">ภาพรวมสต็อกรถยนต์</p>
             </div>
             
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
-                <!-- Filled by JS -->
-            </div>
-
             <!-- Advanced Search -->
             <div class="glass-card-static p-5 mb-6">
                 <h3 class="text-base font-bold mb-4 flex items-center gap-2">
@@ -125,6 +120,11 @@ if (!isset($_SESSION['user_id'])) {
                 <button onclick="advancedSearch()" class="btn-primary w-full justify-center">
                     <i class='bx bx-search'></i> ค้นหา
                 </button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
+                <!-- Filled by JS -->
             </div>
             
             <!-- Financial Summary -->
