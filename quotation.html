@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบเสนอราคา - ระบบ StockCar</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            padding: 20px;
+        }
+        
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            border-radius: 4px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f97316;
+        }
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f97316;
+            margin-bottom: 4px;
+        }
+        .header-left p {
+            color: #666;
+            font-size: 13px;
+        }
+        .header-right {
+            text-align: right;
+        }
+        .header-right .doc-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .header-right .doc-no {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .info-box h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f97316;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .info-box p {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        thead th {
+            background: #1a1a1a;
+            color: white;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+        }
+        thead th:first-child { border-radius: 6px 0 0 0; }
+        thead th:last-child { border-radius: 0 6px 0 0; text-align: right; }
+        thead th:nth-child(3) { text-align: center; }
+        thead th:nth-child(4) { text-align: right; }
+        
+        tbody td {
+            padding: 14px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        tbody td:last-child { text-align: right; font-weight: 600; }
+        tbody td:nth-child(3) { text-align: center; }
+        tbody td:nth-child(4) { text-align: right; }
+        
+        .item-desc {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+        
+        /* Totals */
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 32px;
+        }
+        .totals-box {
+            width: 280px;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .totals-row.grand {
+            border-top: 2px solid #1a1a1a;
+            padding-top: 12px;
+            margin-top: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f97316;
+        }
+        
+        /* Notes */
+        .notes {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+        .notes h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .notes ul {
+            list-style: none;
+            padding: 0;
+        }
+        .notes li {
+            font-size: 13px;
+            color: #666;
+            padding: 3px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+        .notes li::before {
+            content: '•';
+            color: #f97316;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Signature */
+        .signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-top: 60px;
+        }
+        .sig-box {
+            text-align: center;
+        }
+        .sig-line {
+            border-top: 1px solid #ccc;
+            margin-top: 60px;
+            padding-top: 8px;
+        }
+        .sig-label {
+            font-size: 13px;
+            color: #666;
+        }
+        .sig-role {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; padding: 30px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align:center;margin-bottom:16px;">
+        <button onclick="window.print()" style="background:#f97316;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;">
+            🖨️ พิมพ์ / บันทึก PDF
+        </button>
+    </div>
+
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <h1>🚗 StockCar</h1>
+                <p>ระบบจัดการสต็อกรถยนต์</p>
+            </div>
+            <div class="header-right">
+                <div class="doc-title">ใบเสนอราคา</div>
+                <div class="doc-no">เลขที่: QT-20260316-001</div>
+                <div class="doc-no">วันที่: 16 มีนาคม 2569</div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <h3>ผู้เสนอราคา</h3>
+                <p>
+                    <strong>ผู้พัฒนาระบบ</strong><br>
+                    ......................................................<br>
+                    ......................................................<br>
+                    โทร: ..............................
+                </p>
+            </div>
+            <div class="info-box">
+                <h3>เสนอราคาถึง</h3>
+                <p>
+                    <strong>ลูกค้า</strong><br>
+                    ......................................................<br>
+                    ......................................................<br>
+                    โทร: ..............................
+                </p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px;">ลำดับ</th>
+                    <th>รายการ</th>
+                    <th style="width:60px;">จำนวน</th>
+                    <th style="width:120px;">ราคา/หน่วย</th>
+                    <th style="width:120px;">รวม (บาท)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <strong>ระบบจัดการสต็อกรถยนต์ (StockCar)</strong>
+                        <div class="item-desc">
+                            • ระบบเพิ่ม/แก้ไข/ลบข้อมูลรถ พร้อมแนบรูปภาพหลายรูป<br>
+                            • ค้นหาขั้นสูง (ยี่ห้อ, รุ่น, ปี, สาขา, สถานะ)<br>
+                            • ระบบจัดการสาขา พร้อมสีแยกสาขา<br>
+                            • แดชบอร์ดสรุปข้อมูลสต็อก<br>
+                            • ระบบ Login / Logout<br>
+                            • Responsive รองรับมือถือ/แท็บเล็ต/คอมพิวเตอร์<br>
+                            • ธีม Dark Mode (ส้ม-ดำ)
+                        </div>
+                    </td>
+                    <td>1</td>
+                    <td>6,000.00</td>
+                    <td>6,000.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div class="totals-box">
+                <div class="totals-row">
+                    <span>รวมเป็นเงิน</span>
+                    <span>6,000.00</span>
+                </div>
+                <div class="totals-row grand">
+                    <span>ยอดรวมทั้งสิ้น</span>
+                    <span>6,000.00 บาท</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:14px; margin-bottom:24px; color:#333;">
+            <strong>จำนวนเงิน (ตัวอักษร):</strong> หกพันบาทถ้วน
+        </div>
+
+        <div class="notes">
+            <h3>เงื่อนไขและหมายเหตุ</h3>
+            <ul>
+                <li>ใบเสนอราคามีอายุ 30 วัน นับจากวันที่ออก</li>
+                <li>ราคาดังกล่าวรวมการติดตั้งและตั้งค่าระบบบน Server</li>
+                <li>รวมสอนการใช้งานเบื้องต้น</li>
+                <li>ไม่รวมค่าโดเมนและค่า Hosting รายปี</li>
+                <li>รับประกันแก้ไข Bug ฟรี 30 วันหลังส่งมอบงาน</li>
+            </ul>
+        </div>
+
+        <div class="signatures">
+            <div class="sig-box">
+                <div class="sig-line">
+                    <div class="sig-label">ผู้เสนอราคา</div>
+                    <div class="sig-role">วันที่ ......../......../........</div>
+                </div>
+            </div>
+            <div class="sig-box">
+                <div class="sig-line">
+                    <div class="sig-label">ผู้อนุมัติ</div>
+                    <div class="sig-role">วันที่ ......../......../........</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            ใบเสนอราคานี้จัดทำโดยระบบ StockCar — ระบบจัดการสต็อกรถยนต์
+        </div>
+    </div>
+</body>
+</html>
