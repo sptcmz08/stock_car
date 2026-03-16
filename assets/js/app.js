@@ -102,6 +102,26 @@ function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Format number input with commas as user types
+function formatInputComma(el) {
+    let pos = el.selectionStart;
+    let oldLen = el.value.length;
+    let raw = el.value.replace(/[^0-9.]/g, '');
+    // Handle decimal
+    let parts = raw.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    el.value = parts.length > 1 ? parts[0] + '.' + parts[1] : parts[0];
+    // Adjust cursor position
+    let newLen = el.value.length;
+    pos += (newLen - oldLen);
+    el.setSelectionRange(pos, pos);
+}
+
+// Get raw number from comma-formatted string
+function stripCommas(str) {
+    return String(str || '0').replace(/,/g, '');
+}
+
 // ===== STATUS HELPERS =====
 const STATUS_MAP = {
     available: { label: 'พร้อมขาย', icon: '🟢', css: 'status-available' },
@@ -623,7 +643,7 @@ function openVehicleModal(editId) {
                 <div class="grid grid-cols-3 gap-3 mb-3">
                     <div><label class="form-label">ปี</label><input name="year" type="number" class="form-input" value="${formData.year}"></div>
                     <div><label class="form-label">สี</label><input name="color" class="form-input" value="${escapeHtml(formData.color)}" placeholder="เช่น ขาว"></div>
-                    <div><label class="form-label">เลขไมล์</label><input name="mileage" type="number" class="form-input" value="${formData.mileage}"></div>
+                    <div><label class="form-label">เลขไมล์</label><input name="mileage" type="text" inputmode="numeric" class="form-input" value="${formatNumber(formData.mileage)}" oninput="formatInputComma(this)"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div><label class="form-label">เลขตัวถัง (VIN)</label><input name="vin" class="form-input" value="${escapeHtml(formData.vin)}"></div>
@@ -631,7 +651,7 @@ function openVehicleModal(editId) {
                 </div>
                 <div class="mb-3">
                     <label class="form-label">ราคาขาย</label>
-                    <input name="selling_price" type="number" step="0.01" class="form-input" value="${formData.selling_price}">
+                    <input name="selling_price" type="text" inputmode="decimal" class="form-input" value="${formatNumber(formData.selling_price)}" oninput="formatInputComma(this)">
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div>
@@ -713,6 +733,9 @@ async function submitVehicle(event, editId) {
         for (const [key, value] of fd.entries()) {
             if (key !== 'images') payload[key] = value;
         }
+        // Strip commas from numeric fields
+        if (payload.mileage) payload.mileage = stripCommas(payload.mileage);
+        if (payload.selling_price) payload.selling_price = stripCommas(payload.selling_price);
         const result = await api('api/vehicles.php', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -731,6 +754,9 @@ async function submitVehicle(event, editId) {
     } else {
         // Create with FormData (supports file upload)
         const fd = new FormData(form);
+        // Strip commas from numeric fields
+        fd.set('mileage', stripCommas(fd.get('mileage')));
+        fd.set('selling_price', stripCommas(fd.get('selling_price')));
         // Re-key file input from 'images' to 'images[]' for PHP array handling
         const fileInput = document.getElementById('vehicleImages');
         if (fileInput && fileInput.files.length) {
