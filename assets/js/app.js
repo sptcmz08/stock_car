@@ -231,54 +231,55 @@ async function loadDashboard() {
     `).join('') : '<p class="text-slate-500 text-sm text-center py-4">ยังไม่มีรถในสต็อก</p>';
 
     // Populate advanced search dropdowns
-    api('api/branches.php').then(bd => populateAdvancedSearch(data, bd));
+    populateAdvancedSearch();
 }
 
 // ===== ADVANCED SEARCH =====
-function populateAdvancedSearch(dashData, branchData) {
-    // Fetch vehicles data for brands/models/years
-    api('api/vehicles.php').then(vData => {
-        if (!vData.success) return;
+async function populateAdvancedSearch() {
+    try {
+        // Fetch vehicles data for brands/models/years
+        const vData = await api('api/vehicles.php');
+        if (vData && vData.success) {
+            // Brand dropdown
+            const brandSel = document.getElementById('advBrand');
+            if (brandSel) {
+                brandSel.innerHTML = '<option value="">-- ทุกยี่ห้อ --</option>';
+                (vData.brands || []).forEach(b => {
+                    brandSel.innerHTML += `<option value="${escapeHtml(b)}">${b}</option>`;
+                });
+            }
 
-        // Brand dropdown
-        const brandSel = document.getElementById('advBrand');
-        if (brandSel) {
-            brandSel.innerHTML = '<option value="">-- ทุกยี่ห้อ --</option>';
-            (vData.brands || []).forEach(b => {
-                brandSel.innerHTML += `<option value="${escapeHtml(b)}">${b}</option>`;
-            });
+            // Store vehicles for cascading model dropdown
+            window._advVehicles = vData.vehicles || [];
+            populateModelDropdown('');
+
+            // Year dropdowns
+            const years = (vData.years || []).map(y => parseInt(y)).sort((a, b) => a - b);
+            const yearMinSel = document.getElementById('advYearMin');
+            const yearMaxSel = document.getElementById('advYearMax');
+            if (yearMinSel && yearMaxSel) {
+                yearMinSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
+                yearMaxSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
+                years.forEach(y => {
+                    yearMinSel.innerHTML += `<option value="${y}">${y}</option>`;
+                    yearMaxSel.innerHTML += `<option value="${y}">${y}</option>`;
+                });
+            }
         }
 
-        // Store models and full data for cascading
-        window._advModels = vData.models || [];
-        window._advVehicles = vData.vehicles || [];
-
-        // Model dropdown (all models initially)
-        populateModelDropdown('');
-
-        // Year dropdowns
-        const years = (vData.years || []).map(y => parseInt(y)).sort((a, b) => a - b);
-        const yearMinSel = document.getElementById('advYearMin');
-        const yearMaxSel = document.getElementById('advYearMax');
-        if (yearMinSel && yearMaxSel) {
-            yearMinSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
-            yearMaxSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>';
-            years.forEach(y => {
-                yearMinSel.innerHTML += `<option value="${y}">${y}</option>`;
-                yearMaxSel.innerHTML += `<option value="${y}">${y}</option>`;
-            });
+        // Branch dropdown
+        const bData = await api('api/branches.php');
+        if (bData && bData.success) {
+            const branchSel = document.getElementById('advBranch');
+            if (branchSel) {
+                branchSel.innerHTML = '<option value="">-- ทุกสาขา --</option>';
+                bData.branches.forEach(b => {
+                    branchSel.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+                });
+            }
         }
-    });
-
-    // Branch dropdown
-    if (branchData && branchData.success) {
-        const branchSel = document.getElementById('advBranch');
-        if (branchSel) {
-            branchSel.innerHTML = '<option value="">-- ทุกสาขา --</option>';
-            branchData.branches.forEach(b => {
-                branchSel.innerHTML += `<option value="${b.id}">${b.name}</option>`;
-            });
-        }
+    } catch (err) {
+        console.error('populateAdvancedSearch error:', err);
     }
 }
 
