@@ -1047,9 +1047,10 @@ function closeModal(id) {
     }
 }
 
-// ===== INIT =====
+// ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
-    loadDashboard();
+    navigateTo('dashboard');
+    
     // Keyboard shortcut
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1058,3 +1059,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ===== LOGOUT =====
+async function logout() {
+    if (!confirm('ต้องการออกจากระบบ?')) return;
+    await fetch('api/auth.php', { method: 'DELETE' });
+    window.location.href = 'login.php';
+}

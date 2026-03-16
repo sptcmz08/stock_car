@@ -2,6 +2,17 @@
 -- ระบบสต็อกรถยนต์
 
 
+-- ตารางผู้ใช้
+CREATE TABLE `users` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `username` VARCHAR(50) NOT NULL UNIQUE,
+    `password` VARCHAR(255) NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- เพิ่มผู้ใช้ admin (password: password)
+INSERT INTO `users` (`username`, `password`) VALUES
+('admin', '$2y$10$laOV7PZohUrg2VrYivaAm.d25.r8K5dawwFIerDFsP4xXY/GcVlj6');
 
 -- ตารางสาขา
 CREATE TABLE `branches` (

@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -13,7 +20,7 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=2">
+    <link rel="stylesheet" href="assets/css/style.css?v=3">
 </head>
 <body>
     <!-- ===== Top Header ===== -->
@@ -42,6 +49,9 @@
             </nav>
             <button onclick="openVehicleModal()" class="hidden md:flex btn-primary !py-2 !px-4 !text-sm !rounded-xl">
                 <i class='bx bx-plus'></i> เพิ่มรถ
+            </button>
+            <button onclick="logout()" class="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-slate-400 hover:text-red-400" title="ออกจากระบบ">
+                <i class='bx bx-log-out text-xl'></i>
             </button>
         </div>
     </header>
