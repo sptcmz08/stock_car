@@ -7,7 +7,7 @@
 CREATE TABLE `branches` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(100) NOT NULL,
-    `color` VARCHAR(7) NOT NULL DEFAULT '#6366f1',
+    `color` VARCHAR(7) NOT NULL DEFAULT '#f97316',
     `sort_order` INT NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -45,6 +45,6 @@ CREATE TABLE `vehicle_images` (
 
 -- ข้อมูลสาขาเริ่มต้น
 INSERT INTO `branches` (`name`, `color`, `sort_order`) VALUES
-('สาขาบางนา', '#6366f1', 1),
+('สาขาบางนา', '#f97316', 1),
 ('สาขารังสิต', '#f59e0b', 2),
 ('สาขานครปฐม', '#10b981', 3);
