@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Stock Car - ระบบสต็อกรถยนต์</title>
+    <title>Dara Autocar - ระบบสต็อกรถยนต์</title>
     <meta name="description" content="ระบบจัดการสต็อกรถยนต์ สำหรับเต็นท์รถ">
     
     <!-- Tailwind CSS CDN -->
@@ -30,7 +30,7 @@ if (!isset($_SESSION['user_id'])) {
                 <i class='bx bxs-car'></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold gradient-text leading-tight">StockCar</h1>
+                <h1 class="text-lg font-bold gradient-text leading-tight">Dara Autocar</h1>
                 <p class="text-xs text-slate-500 hidden sm:block">ระบบสต็อกรถยนต์</p>
             </div>
         </div>

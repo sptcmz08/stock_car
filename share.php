@@ -324,7 +324,7 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
         <div class="content" style="padding:0 16px;">
             <div style="display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;">
                 <i class='bx bxs-car' style="color:var(--accent);font-size:18px;"></i>
-                StockCar Album
+                Dara Autocar Album
             </div>
         </div>
     </div>
@@ -411,7 +411,7 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
         </div>
 
         <div class="footer">
-            แชร์โดย StockCar
+            แชร์โดย Dara Autocar
         </div>
     </div>
 

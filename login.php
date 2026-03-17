@@ -10,7 +10,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Stock Car - เข้าสู่ระบบ</title>
+    <title>Dara Autocar - เข้าสู่ระบบ</title>
     <meta name="description" content="ระบบจัดการสต็อกรถยนต์ - เข้าสู่ระบบ">
     
     <!-- Tailwind CSS CDN -->
@@ -92,7 +92,7 @@ if (isset($_SESSION['user_id'])) {
             <div class="login-logo">
                 <i class='bx bxs-car'></i>
             </div>
-            <h1 class="text-2xl font-bold gradient-text">StockCar</h1>
+            <h1 class="text-2xl font-bold gradient-text">Dara Autocar</h1>
             <p class="text-slate-500 text-sm mt-1">ระบบสต็อกรถยนต์</p>
         </div>
 
