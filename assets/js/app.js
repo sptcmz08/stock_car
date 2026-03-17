@@ -674,7 +674,15 @@ async function renameAlbum(id) {
 }
 
 async function downloadAlbum(id) {
-    const imgs = window._detailImages || [];
+    let imgs = window._detailImages || [];
+    // If no detail images loaded, fetch from API
+    if (!imgs.length) {
+        showToast('กำลังเตรียมข้อมูล...');
+        const data = await api('api/vehicles.php?id=' + id);
+        if (data.success && data.vehicles.length && data.vehicles[0].images) {
+            imgs = data.vehicles[0].images;
+        }
+    }
     if (!imgs.length) return showToast('ไม่มีรูปภาพ', 'error');
     showToast('กำลังดาวน์โหลด ' + imgs.length + ' รูป...');
     for (let i = 0; i < imgs.length; i++) {
