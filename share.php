@@ -58,12 +58,13 @@ $imgCount = count($images);
             --accent: #f97316;
             --accent2: #fb923c;
             --bg: #0c1322;
-            --card: rgba(30,41,59,0.7);
+            --card: #161f30;
+            --card2: #1c2640;
             --border: rgba(255,255,255,0.06);
             --text: #f1f5f9;
             --text2: #94a3b8;
             --text3: #64748b;
-            --radius: 16px;
+            --r: 14px;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -74,219 +75,243 @@ $imgCount = count($images);
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* ===== HERO GALLERY ===== */
-        .hero {
+        /* ===== LAYOUT ===== */
+        .wrap {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .section { margin-bottom: 12px; }
+
+        /* ===== BRAND BAR ===== */
+        .brand-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 16px;
+            font-size: 13px;
+            color: var(--text3);
+        }
+        .brand-bar i { color: var(--accent); font-size: 18px; }
+
+        /* ===== IMAGE CAROUSEL (CONTAINED) ===== */
+        .carousel-card {
+            background: var(--card);
+            border-radius: var(--r);
+            overflow: hidden;
+            position: relative;
+        }
+        .carousel-main {
             position: relative;
             width: 100%;
-            aspect-ratio: 4/3;
-            max-height: 480px;
+            aspect-ratio: 16/10;
             overflow: hidden;
-            background: #1e293b;
+            cursor: pointer;
         }
-        .hero img {
+        .carousel-main img {
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            background: #111827;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
-        .hero img.active { opacity: 1; }
-        .hero-overlay {
+        .carousel-main img.active { opacity: 1; }
+        .carousel-badge {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 120px;
-            background: linear-gradient(transparent, rgba(12,19,34,0.9));
-            pointer-events: none;
-        }
-        .hero-badge {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 12px;
+            top: 12px;
+            left: 12px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 600;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             backdrop-filter: blur(12px);
             z-index: 2;
         }
-        .hero-dots {
+        .carousel-count {
             position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 6px;
-            z-index: 2;
-        }
-        .hero-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .hero-dot.active {
-            background: var(--accent);
-            width: 24px;
-            border-radius: 4px;
-        }
-        .hero-count {
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px);
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 11px;
             color: rgba(255,255,255,0.8);
             z-index: 2;
         }
-        .hero-no-img {
-            width: 100%;
-            aspect-ratio: 4/3;
-            max-height: 480px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 3;
+            transition: background 0.2s;
         }
-
-        /* ===== CONTENT ===== */
-        .wrap {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 0 16px 32px;
-        }
-
-        /* Price Bar */
-        .price-bar {
+        .carousel-nav:active { background: rgba(0,0,0,0.7); }
+        .carousel-nav.prev { left: 8px; }
+        .carousel-nav.next { right: 8px; }
+        /* Thumbnails strip */
+        .carousel-strip {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 0;
-            border-bottom: 1px solid var(--border);
+            gap: 3px;
+            padding: 3px;
+            overflow-x: auto;
+            scrollbar-width: none;
         }
-        .price-value {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .carousel-strip::-webkit-scrollbar { display: none; }
+        .carousel-strip .strip-thumb {
+            width: 56px;
+            height: 56px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+            border: 2px solid transparent;
         }
-        .price-label {
-            font-size: 11px;
-            color: var(--text3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
+        .carousel-strip .strip-thumb.active {
+            opacity: 1;
+            border-color: var(--accent);
+        }
+        .carousel-strip .strip-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        /* Title Section */
-        .title-section {
-            padding: 20px 0;
+        /* ===== TITLE + PRICE CARD ===== */
+        .info-main {
+            background: var(--card);
+            border-radius: var(--r);
+            padding: 20px;
         }
-        .title-section h1 {
-            font-size: 24px;
+        .info-name {
+            font-size: 22px;
             font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
-        .title-tags {
+        .info-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
+            margin-bottom: 16px;
         }
-        .tag {
+        .itag {
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 4px 10px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.04);
             color: var(--text2);
         }
-        .tag i { font-size: 14px; }
-        .tag.branch {
+        .itag i { font-size: 13px; }
+        .info-price-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .info-price-label {
+            font-size: 11px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-price {
+            font-size: 30px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .info-branch {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 600;
         }
 
-        /* Specs Grid */
-        .specs {
+        /* ===== SPECS ===== */
+        .specs-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1px;
             background: var(--border);
-            border-radius: var(--radius);
+            border-radius: var(--r);
             overflow: hidden;
-            margin: 16px 0;
         }
-        .spec-item {
+        .spec {
             background: var(--card);
-            backdrop-filter: blur(10px);
-            padding: 16px;
+            padding: 14px;
             text-align: center;
         }
-        .spec-item .spec-icon {
-            font-size: 20px;
-            color: var(--accent);
-            margin-bottom: 4px;
-        }
-        .spec-item .spec-val {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-        .spec-item .spec-label {
-            font-size: 11px;
-            color: var(--text3);
-        }
+        .spec-icon { color: var(--accent); font-size: 18px; margin-bottom: 4px; }
+        .spec-val { font-size: 14px; font-weight: 600; }
+        .spec-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Photo Thumbnails */
-        .thumbs-section { margin: 16px 0; }
-        .thumbs-title {
-            font-size: 13px;
+        /* ===== MORE PHOTOS ===== */
+        .more-photos {
+            background: var(--card);
+            border-radius: var(--r);
+            padding: 16px;
+        }
+        .more-title {
+            font-size: 12px;
             font-weight: 600;
             color: var(--text3);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 10px;
         }
-        .thumbs-grid {
+        .pho-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
-            border-radius: var(--radius);
+            border-radius: 10px;
             overflow: hidden;
         }
-        .thumb {
+        .pho-item {
             aspect-ratio: 1;
             overflow: hidden;
             cursor: pointer;
         }
-        .thumb img {
+        .pho-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.3s;
         }
-        .thumb:active img { transform: scale(1.08); }
-        @media (min-width: 480px) { .thumb:hover img { transform: scale(1.08); } }
+        .pho-item:active img { transform: scale(1.06); }
 
-        /* Actions */
-        .actions-bar {
+        /* ===== ACTIONS ===== */
+        .act-row {
             display: flex;
             gap: 8px;
-            margin: 16px 0;
         }
         .act-btn {
             flex: 1;
@@ -294,224 +319,140 @@ $imgCount = count($images);
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 11px 12px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             background: var(--card);
-            backdrop-filter: blur(10px);
-            color: var(--text);
-            font-size: 13px;
+            color: var(--text2);
+            font-size: 12px;
             font-weight: 500;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s;
             text-decoration: none;
+            transition: all 0.2s;
         }
         .act-btn:active { transform: scale(0.97); }
-        .act-btn i { font-size: 17px; }
+        .act-btn i { font-size: 16px; }
 
-        /* Notes */
-        .notes-card {
+        /* ===== NOTES ===== */
+        .note-card {
             background: var(--card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
+            border-radius: var(--r);
             padding: 16px;
-            margin: 16px 0;
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text2);
             line-height: 1.6;
         }
-        .notes-card strong {
+        .note-card strong {
             display: block;
-            color: var(--text);
-            font-size: 12px;
+            color: var(--text3);
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 6px;
         }
 
-        /* Footer */
-        .share-footer {
+        /* ===== FOOTER ===== */
+        .s-footer {
             text-align: center;
-            padding: 24px 0 40px;
+            padding: 20px 0 32px;
             font-size: 11px;
             color: var(--text3);
-            border-top: 1px solid var(--border);
-            margin-top: 16px;
         }
-        .share-footer .brand {
+        .s-footer .brand {
             font-weight: 700;
             color: var(--accent);
         }
 
         /* ===== LIGHTBOX ===== */
-        .lb {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.98);
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            animation: lbFade 0.2s ease;
-        }
-        @keyframes lbFade { from { opacity:0 } to { opacity:1 } }
-        .lb-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            flex-shrink: 0;
-        }
-        .lb-cnt {
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-            font-weight: 500;
-        }
-        .lb-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .lb-btn:active { background: rgba(255,255,255,0.2); }
-        .lb-img {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .lb-img img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            user-select: none;
-        }
-        .lb-bot {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            flex-shrink: 0;
-        }
-        .lb-dl {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 24px;
-            border-radius: 10px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-        }
-        .lb-dl:active { opacity: 0.8; }
-        
+        .lb { position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:200;display:flex;flex-direction:column;animation:lbF 0.2s ease; }
+        @keyframes lbF { from{opacity:0}to{opacity:1} }
+        .lb-top { display:flex;align-items:center;justify-content:space-between;padding:12px 16px;flex-shrink:0; }
+        .lb-cnt { font-size:14px;color:rgba(255,255,255,0.5);font-weight:500; }
+        .lb-btn { width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);color:white;border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+        .lb-btn:active { background:rgba(255,255,255,0.2); }
+        .lb-img { flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden; }
+        .lb-img img { max-width:100%;max-height:100%;object-fit:contain;user-select:none; }
+        .lb-bot { display:flex;align-items:center;justify-content:center;padding:16px;flex-shrink:0; }
+        .lb-dl { display:flex;align-items:center;gap:6px;padding:10px 24px;border-radius:10px;background:var(--accent);color:white;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer; }
+        .lb-dl:active { opacity:0.8; }
+
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             .lb-bot { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
-            .share-footer { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+            .s-footer { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
         }
     </style>
 </head>
 <body>
+    <div class="wrap">
+        <!-- Brand -->
+        <div class="brand-bar">
+            <i class='bx bxs-car'></i> Dara Autocar
+        </div>
 
-    <!-- Hero Image Gallery -->
-    <?php if ($images): ?>
-    <div class="hero" onclick="openLB(window._heroIdx || 0)">
-        <?php foreach ($images as $i => $img): ?>
-        <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" class="<?= $i === 0 ? 'active' : '' ?>" alt="" <?= $i > 0 ? 'loading="lazy"' : '' ?>>
-        <?php endforeach; ?>
-        <div class="hero-overlay"></div>
-        <div class="hero-badge" style="background:<?= $st['bg'] ?>;color:<?= $st['color'] ?>"><?= $st['label'] ?></div>
-        <?php if ($imgCount > 1): ?>
-        <div class="hero-dots">
-            <?php for ($i = 0; $i < min($imgCount, 8); $i++): ?>
-            <div class="hero-dot <?= $i === 0 ? 'active' : '' ?>" onclick="event.stopPropagation();goHero(<?= $i ?>)"></div>
-            <?php endfor; ?>
+        <!-- Image Carousel Card -->
+        <?php if ($images): ?>
+        <div class="carousel-card section" id="carouselCard">
+            <div class="carousel-main" onclick="openLB(window._cIdx||0)">
+                <?php foreach ($images as $i => $img): ?>
+                <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" class="<?= $i===0 ? 'active' : '' ?>" alt="" <?= $i>0 ? 'loading="lazy"' : '' ?>>
+                <?php endforeach; ?>
+                <div class="carousel-badge" style="background:<?= $st['bg'] ?>;color:<?= $st['color'] ?>"><?= $st['label'] ?></div>
+                <?php if ($imgCount > 1): ?>
+                <div class="carousel-count"><i class='bx bx-images'></i> <?= $imgCount ?></div>
+                <?php endif; ?>
+            </div>
+            <?php if ($imgCount > 1): ?>
+            <div class="carousel-strip" id="thumbStrip">
+                <?php foreach ($images as $i => $img): ?>
+                <div class="strip-thumb <?= $i===0?'active':'' ?>" onclick="goSlide(<?= $i ?>)">
+                    <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" alt="" loading="lazy">
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php else: ?>
+        <div class="section" style="background:var(--card);border-radius:var(--r);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;">
+            <i class='bx bxs-car' style="font-size:60px;color:rgba(249,115,22,0.12)"></i>
         </div>
         <?php endif; ?>
-        <div class="hero-count"><i class='bx bx-images'></i> <?= $imgCount ?></div>
-    </div>
-    <?php else: ?>
-    <div class="hero-no-img">
-        <i class='bx bxs-car' style="font-size:80px;color:rgba(249,115,22,0.12)"></i>
-    </div>
-    <?php endif; ?>
 
-    <div class="wrap">
-        <!-- Price -->
-        <div class="price-bar">
-            <div>
-                <div class="price-label">ราคา</div>
-                <div class="price-value">฿<?= number_format($vehicle['selling_price']) ?></div>
-            </div>
-            <?php if ($vehicle['branch_name']): ?>
-            <span class="tag branch" style="background:<?= $vehicle['branch_color'] ?>18;color:<?= $vehicle['branch_color'] ?>">
-                <i class='bx bxs-map-pin'></i> <?= htmlspecialchars($vehicle['branch_name']) ?>
-            </span>
-            <?php endif; ?>
-        </div>
-
-        <!-- Title -->
-        <div class="title-section">
-            <h1><?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?></h1>
-            <div class="title-tags">
-                <span class="tag"><i class='bx bx-calendar'></i> <?= $vehicle['year'] ?></span>
+        <!-- Title + Price -->
+        <div class="info-main section">
+            <div class="info-name"><?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?></div>
+            <div class="info-tags">
+                <span class="itag"><i class='bx bx-calendar'></i> <?= $vehicle['year'] ?></span>
                 <?php if ($vehicle['color']): ?>
-                <span class="tag"><i class='bx bx-palette'></i> <?= htmlspecialchars($vehicle['color']) ?></span>
+                <span class="itag"><i class='bx bx-palette'></i> <?= htmlspecialchars($vehicle['color']) ?></span>
                 <?php endif; ?>
                 <?php if ($vehicle['license_plate']): ?>
-                <span class="tag"><i class='bx bx-id-card'></i> <?= htmlspecialchars($vehicle['license_plate']) ?></span>
+                <span class="itag"><i class='bx bx-id-card'></i> <?= htmlspecialchars($vehicle['license_plate']) ?></span>
+                <?php endif; ?>
+                <?php if ($vehicle['mileage'] > 0): ?>
+                <span class="itag"><i class='bx bx-tachometer'></i> <?= number_format($vehicle['mileage']) ?> กม.</span>
+                <?php endif; ?>
+            </div>
+            <div class="info-price-row">
+                <div>
+                    <div class="info-price-label">ราคา</div>
+                    <div class="info-price">฿<?= number_format($vehicle['selling_price']) ?></div>
+                </div>
+                <?php if ($vehicle['branch_name']): ?>
+                <span class="info-branch" style="background:<?= $vehicle['branch_color'] ?>18;color:<?= $vehicle['branch_color'] ?>">
+                    <i class='bx bxs-map-pin'></i> <?= htmlspecialchars($vehicle['branch_name']) ?>
+                </span>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- Specs Grid -->
-        <div class="specs">
-            <div class="spec-item">
-                <div class="spec-icon"><i class='bx bx-calendar'></i></div>
-                <div class="spec-val"><?= $vehicle['year'] ?></div>
-                <div class="spec-label">ปี</div>
-            </div>
-            <div class="spec-item">
-                <div class="spec-icon"><i class='bx bx-tachometer'></i></div>
-                <div class="spec-val"><?= number_format($vehicle['mileage']) ?></div>
-                <div class="spec-label">กิโลเมตร</div>
-            </div>
-            <?php if ($vehicle['color']): ?>
-            <div class="spec-item">
-                <div class="spec-icon"><i class='bx bx-palette'></i></div>
-                <div class="spec-val"><?= htmlspecialchars($vehicle['color']) ?></div>
-                <div class="spec-label">สี</div>
-            </div>
-            <?php endif; ?>
-            <?php if ($vehicle['license_plate']): ?>
-            <div class="spec-item">
-                <div class="spec-icon"><i class='bx bx-id-card'></i></div>
-                <div class="spec-val"><?= htmlspecialchars($vehicle['license_plate']) ?></div>
-                <div class="spec-label">ทะเบียน</div>
-            </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Photo Thumbnails -->
+        <!-- More Photos Grid -->
         <?php if ($imgCount > 1): ?>
-        <div class="thumbs-section">
-            <div class="thumbs-title">รูปภาพ <?= $imgCount ?> รูป</div>
-            <div class="thumbs-grid">
+        <div class="more-photos section">
+            <div class="more-title">รูปภาพทั้งหมด</div>
+            <div class="pho-grid">
                 <?php foreach ($images as $i => $img): ?>
-                <div class="thumb" onclick="openLB(<?= $i ?>)">
+                <div class="pho-item" onclick="openLB(<?= $i ?>)">
                     <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" alt="" loading="lazy">
                 </div>
                 <?php endforeach; ?>
@@ -521,7 +462,7 @@ $imgCount = count($images);
 
         <!-- Actions -->
         <?php if ($imgCount > 0): ?>
-        <div class="actions-bar">
+        <div class="act-row section">
             <a href="api/download_album.php?id=<?= $vehicle['id'] ?>&token=<?= $token ?>" class="act-btn">
                 <i class='bx bx-download'></i> ดาวน์โหลดรูป
             </a>
@@ -530,48 +471,43 @@ $imgCount = count($images);
 
         <!-- Notes -->
         <?php if ($vehicle['notes']): ?>
-        <div class="notes-card">
+        <div class="note-card section">
             <strong>หมายเหตุ</strong>
             <?= nl2br(htmlspecialchars($vehicle['notes'])) ?>
         </div>
         <?php endif; ?>
 
         <!-- Footer -->
-        <div class="share-footer">
+        <div class="s-footer">
             <span class="brand">Dara Autocar</span>
         </div>
     </div>
 
-    <!-- Lightbox & Scripts -->
     <script>
-    const imgs = <?= json_encode(array_map(function($img) { return $img['filename']; }, $images)) ?>;
-    window._heroIdx = 0;
+    const imgs = <?= json_encode(array_map(fn($img) => $img['filename'], $images)) ?>;
+    window._cIdx = 0;
 
-    // Hero auto-slide
     <?php if ($imgCount > 1): ?>
-    (function() {
-        const slides = document.querySelectorAll('.hero img');
-        const dots = document.querySelectorAll('.hero-dot');
-        let cur = 0;
-        setInterval(() => {
-            slides[cur].classList.remove('active');
-            if (dots[cur]) dots[cur].classList.remove('active');
-            cur = (cur + 1) % slides.length;
-            slides[cur].classList.add('active');
-            if (dots[cur]) dots[cur].classList.add('active');
-            window._heroIdx = cur;
-        }, 4000);
-    })();
+    // Auto-slide
+    let autoTimer = setInterval(() => goSlide((window._cIdx + 1) % imgs.length), 4000);
     <?php endif; ?>
 
-    function goHero(i) {
-        const slides = document.querySelectorAll('.hero img');
-        const dots = document.querySelectorAll('.hero-dot');
+    function goSlide(i) {
+        const slides = document.querySelectorAll('.carousel-main img');
+        const thumbs = document.querySelectorAll('.strip-thumb');
         slides.forEach(s => s.classList.remove('active'));
-        dots.forEach(d => d.classList.remove('active'));
-        slides[i].classList.add('active');
-        if (dots[i]) dots[i].classList.add('active');
-        window._heroIdx = i;
+        thumbs.forEach(t => t.classList.remove('active'));
+        if (slides[i]) slides[i].classList.add('active');
+        if (thumbs[i]) {
+            thumbs[i].classList.add('active');
+            thumbs[i].scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+        }
+        window._cIdx = i;
+        // Reset auto-slide timer
+        <?php if ($imgCount > 1): ?>
+        clearInterval(autoTimer);
+        autoTimer = setInterval(() => goSlide((window._cIdx + 1) % imgs.length), 4000);
+        <?php endif; ?>
     }
 
     function openLB(i) {
