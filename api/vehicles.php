@@ -28,6 +28,9 @@ switch ($method) {
     case 'PUT':
         updateVehicle();
         break;
+    case 'PATCH':
+        toggleShareToken();
+        break;
     case 'DELETE':
         deleteVehicle();
         break;
@@ -292,4 +295,34 @@ function uploadImages($vehicleId) {
     }
     
     return $uploaded;
+}
+
+function toggleShareToken() {
+    $db = getDB();
+    $input = getJsonInput();
+    $id = (int)($input['id'] ?? 0);
+    if ($id <= 0) {
+        jsonResponse(['error' => 'Invalid vehicle ID'], 400);
+    }
+    
+    // Check if token exists
+    $stmt = $db->prepare("SELECT share_token FROM vehicles WHERE id = ?");
+    $stmt->execute([$id]);
+    $vehicle = $stmt->fetch();
+    if (!$vehicle) {
+        jsonResponse(['error' => 'Vehicle not found'], 404);
+    }
+    
+    if ($vehicle['share_token']) {
+        $token = $vehicle['share_token'];
+    } else {
+        $token = bin2hex(random_bytes(16));
+        $stmt = $db->prepare("UPDATE vehicles SET share_token = ? WHERE id = ?");
+        $stmt->execute([$token, $id]);
+    }
+    
+    jsonResponse([
+        'success' => true,
+        'share_token' => $token
+    ]);
 }

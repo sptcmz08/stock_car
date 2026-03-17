@@ -454,7 +454,7 @@ function goToVehiclesWithStatus(status) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== VEHICLE DETAIL =====
+// ===== VEHICLE DETAIL (ALBUM STYLE) =====
 async function showVehicleDetail(vehicleId) {
     currentDetailId = vehicleId;
     const data = await api('api/vehicles.php?id=' + vehicleId);
@@ -470,99 +470,185 @@ async function showVehicleDetail(vehicleId) {
 
     const container = document.getElementById('vehicleDetail');
     container.innerHTML = `
-        <button onclick="navigateTo('vehicles')" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-all mb-4">
-            <i class='bx bx-arrow-back text-lg'></i> กลับ
-        </button>
-
-        <!-- Image Gallery -->
-        <div class="mb-4">
-            ${images.length ? `
-                <img id="mainImage" src="uploads/${images[0].filename}" class="detail-image-main mb-3" alt="" onclick="openLightbox(currentThumbIndex)">
-                ${images.length > 1 ? `
-                    <div class="detail-thumbnails">
-                        ${images.map((img, i) => `<img src="uploads/${img.filename}" class="${i === 0 ? 'active' : ''}" onclick="selectThumb(${i})" alt="">`).join('')}
-                    </div>
-                ` : ''}
-            ` : `<div class="detail-image-main flex items-center justify-center" style="background:rgba(249,115,22,0.1);"><i class='bx bxs-car text-6xl text-orange-400/30'></i></div>`}
-        </div>
-
-        <!-- Title & Status -->
-        <div class="flex items-start justify-between mb-4">
-            <div>
-                <h2 class="text-2xl font-bold">${v.brand} ${v.model}</h2>
-                <p class="text-slate-500 text-sm">${v.year} • ${v.color || '-'}</p>
+        <!-- Album Header -->
+        <div class="album-header">
+            <button onclick="navigateTo('vehicles')" class="album-back-btn">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+            <div class="album-title">
+                <h2 class="text-base font-bold">${v.brand} ${v.model} <span class="text-slate-500 font-normal">(${images.length})</span></h2>
+                <p class="text-xs text-slate-500">${v.year} • ${v.color || ''}</p>
             </div>
-            <div class="text-right">
-                ${getStatusBadge(v.status)}
-            </div>
-        </div>
-
-        <!-- Price -->
-        <div class="glass-card-static p-4 mb-4">
-            <div class="text-center">
-                <div class="text-xs text-slate-500 mb-1">ราคาขาย</div>
-                <div class="text-2xl font-bold text-emerald-400">${formatCurrency(v.selling_price)}</div>
-            </div>
-        </div>
-
-        <!-- Info -->
-        <div class="glass-card-static p-4 mb-4">
-            <h3 class="font-bold text-sm mb-3 text-slate-400">ข้อมูลรถ</h3>
-            <div class="info-row"><span class="info-label">ทะเบียน</span><span class="info-value">${v.license_plate || '-'}</span></div>
-            <div class="info-row"><span class="info-label">VIN</span><span class="info-value text-xs">${v.vin || '-'}</span></div>
-            <div class="info-row"><span class="info-label">เลขไมล์</span><span class="info-value">${formatNumber(v.mileage)} กม.</span></div>
-            <div class="info-row">
-                <span class="info-label">สาขา</span>
-                <span class="info-value">
-                    ${v.branch_name ? `<span class="branch-tag" style="background:${v.branch_color}20;color:${v.branch_color};"><i class='bx bxs-map-pin'></i> ${v.branch_name}</span>` : '<span class="text-slate-500">ยังไม่กำหนด</span>'}
-                </span>
-            </div>
-            ${v.notes ? `<div class="info-row"><span class="info-label">หมายเหตุ</span><span class="info-value text-slate-400">${v.notes}</span></div>` : ''}
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="glass-card-static p-4 mb-4">
-            <h3 class="font-bold text-sm mb-3 text-slate-400">จัดการ</h3>
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <select id="detailStatus" class="form-select !text-sm" onchange="updateVehicleField(${v.id}, 'status', this.value)">
-                    ${Object.entries(STATUS_MAP).map(([k, s]) => `<option value="${k}" ${v.status === k ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}
-                </select>
-                <select id="detailBranch" class="form-select !text-sm" onchange="updateVehicleField(${v.id}, 'branch_id', this.value)">
-                    <option value="">-- ไม่ระบุสาขา --</option>
-                    ${branches.map(b => `<option value="${b.id}" ${v.branch_id == b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
-                </select>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="openVehicleModal(${v.id})" class="btn-secondary flex-1 !text-sm justify-center"><i class='bx bx-edit'></i> แก้ไข</button>
-                <button onclick="confirmDeleteVehicle(${v.id})" class="btn-danger !text-sm"><i class='bx bx-trash'></i></button>
-            </div>
-        </div>
-
-        <!-- Image Management -->
-        <div class="glass-card-static p-4 mb-4">
-            <h3 class="font-bold text-sm mb-3 text-slate-400">จัดการรูปภาพ</h3>
-            <div class="upload-zone" onclick="document.getElementById('addMoreImages').click()" id="detailUploadZone">
-                <input type="file" id="addMoreImages" multiple accept="image/*" hidden onchange="uploadMoreImages(${v.id})">
-                <i class='bx bx-cloud-upload'></i>
-                <p class="text-sm text-slate-500">คลิกเพื่อเพิ่มรูปภาพ</p>
-            </div>
-            ${images.length ? `
-                <div class="grid grid-cols-3 gap-2 mt-3">
-                    ${images.map(img => `
-                        <div class="relative rounded-xl overflow-hidden aspect-square group">
-                            <img src="uploads/${img.filename}" class="w-full h-full object-cover" alt="">
-                            <button onclick="event.stopPropagation();deleteImage(${img.id})" class="img-delete-btn absolute top-1 right-1 w-7 h-7 bg-red-500/80 text-white rounded-full flex items-center justify-center text-xs transition-all">
-                                <i class='bx bx-x'></i>
-                            </button>
-                        </div>
-                    `).join('')}
+            <div class="album-menu-wrap">
+                <button onclick="toggleAlbumMenu()" class="album-menu-btn" id="albumMenuBtn">
+                    <i class='bx bx-dots-vertical-rounded text-xl'></i>
+                </button>
+                <div class="album-dropdown" id="albumDropdown">
+                    <button onclick="document.getElementById('albumUploadInput').click(); toggleAlbumMenu();">
+                        <i class='bx bx-upload'></i> อัปโหลด
+                    </button>
+                    <button onclick="renameAlbum(${v.id}); toggleAlbumMenu();">
+                        <i class='bx bx-edit'></i> เปลี่ยนชื่ออัลบั้ม
+                    </button>
+                    ${images.length ? `<button onclick="downloadAlbum(${v.id}); toggleAlbumMenu();">
+                        <i class='bx bx-download'></i> ดาวน์โหลดอัลบั้ม
+                    </button>` : ''}
+                    <button onclick="shareAlbum(${v.id}); toggleAlbumMenu();">
+                        <i class='bx bx-share-alt'></i> แชร์อัลบั้ม
+                    </button>
+                    <button class="text-red-400" onclick="deleteAlbum(${v.id}); toggleAlbumMenu();">
+                        <i class='bx bx-trash'></i> ลบอัลบั้ม
+                    </button>
                 </div>
-            ` : ''}
+            </div>
+            <input type="file" id="albumUploadInput" multiple accept="image/*" hidden onchange="uploadMoreImages(${v.id})">
+        </div>
+
+        <!-- Photo Grid -->
+        <div class="album-grid">
+            ${images.length ? images.map((img, i) => `
+                <div class="album-photo" onclick="openLightbox(${i})">
+                    <img src="uploads/${img.filename}" alt="" loading="lazy">
+                    <button onclick="event.stopPropagation();deleteImage(${img.id})" class="album-photo-delete">
+                        <i class='bx bx-x'></i>
+                    </button>
+                </div>
+            `).join('') : `
+                <div class="album-empty" onclick="document.getElementById('albumUploadInput').click()">
+                    <i class='bx bx-camera text-4xl text-orange-400/30'></i>
+                    <p class="text-sm text-slate-500 mt-2">แตะเพื่อเพิ่มรูปภาพ</p>
+                </div>
+            `}
+        </div>
+
+        <!-- Vehicle Info -->
+        <div class="px-4 pb-6">
+            <!-- Price & Status -->
+            <div class="glass-card-static p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-slate-500">ราคาขาย</div>
+                        <div class="text-xl font-bold text-orange-400">${formatCurrency(v.selling_price)}</div>
+                    </div>
+                    <div class="text-right">
+                        ${getStatusBadge(v.status)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="glass-card-static p-4 mb-4">
+                <h3 class="font-bold text-sm mb-3 text-slate-400">ข้อมูลรถ</h3>
+                <div class="info-row"><span class="info-label">ทะเบียน</span><span class="info-value">${v.license_plate || '-'}</span></div>
+                <div class="info-row"><span class="info-label">VIN</span><span class="info-value text-xs">${v.vin || '-'}</span></div>
+                <div class="info-row"><span class="info-label">เลขไมล์</span><span class="info-value">${formatNumber(v.mileage)} กม.</span></div>
+                <div class="info-row">
+                    <span class="info-label">สาขา</span>
+                    <span class="info-value">
+                        ${v.branch_name ? `<span class="branch-tag" style="background:${v.branch_color}20;color:${v.branch_color};"><i class='bx bxs-map-pin'></i> ${v.branch_name}</span>` : '<span class="text-slate-500">ยังไม่กำหนด</span>'}
+                    </span>
+                </div>
+                ${v.notes ? `<div class="info-row"><span class="info-label">หมายเหตุ</span><span class="info-value text-slate-400">${v.notes}</span></div>` : ''}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="glass-card-static p-4 mb-4">
+                <h3 class="font-bold text-sm mb-3 text-slate-400">จัดการ</h3>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <select id="detailStatus" class="form-select !text-sm" onchange="updateVehicleField(${v.id}, 'status', this.value)">
+                        ${Object.entries(STATUS_MAP).map(([k, s]) => `<option value="${k}" ${v.status === k ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}
+                    </select>
+                    <select id="detailBranch" class="form-select !text-sm" onchange="updateVehicleField(${v.id}, 'branch_id', this.value)">
+                        <option value="">-- ไม่ระบุสาขา --</option>
+                        ${branches.map(b => `<option value="${b.id}" ${v.branch_id == b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+                    </select>
+                </div>
+                <button onclick="openVehicleModal(${v.id})" class="btn-secondary w-full !text-sm justify-center"><i class='bx bx-edit'></i> แก้ไขข้อมูลรถ</button>
+            </div>
         </div>
     `;
 
     // Store images for lightbox
     window._detailImages = images;
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', closeAlbumMenuOnClickOutside);
+}
+
+// ===== ALBUM FUNCTIONS =====
+function toggleAlbumMenu() {
+    const dd = document.getElementById('albumDropdown');
+    if (dd) dd.classList.toggle('show');
+}
+
+function closeAlbumMenuOnClickOutside(e) {
+    const dd = document.getElementById('albumDropdown');
+    const btn = document.getElementById('albumMenuBtn');
+    if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) {
+        dd.classList.remove('show');
+    }
+}
+
+async function renameAlbum(id) {
+    const data = await api('api/vehicles.php?id=' + id);
+    if (!data.success || !data.vehicles.length) return;
+    const v = data.vehicles[0];
+    
+    const brand = prompt('ยี่ห้อ:', v.brand);
+    if (brand === null) return;
+    const model = prompt('รุ่น:', v.model);
+    if (model === null) return;
+    
+    if (!brand.trim() || !model.trim()) {
+        return showToast('กรุณากรอกยี่ห้อและรุ่น', 'error');
+    }
+    
+    const res = await api('api/vehicles.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, brand: brand.trim(), model: model.trim() })
+    });
+    if (res.success) {
+        showToast('เปลี่ยนชื่อเรียบร้อย');
+        showVehicleDetail(id);
+    }
+}
+
+function downloadAlbum(id) {
+    window.location.href = 'api/download_album.php?id=' + id;
+    showToast('กำลังดาวน์โหลด...');
+}
+
+async function shareAlbum(id) {
+    const res = await api('api/vehicles.php', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    if (res.success && res.share_token) {
+        const url = window.location.origin + window.location.pathname.replace('index.php', '') + 'share.php?token=' + res.share_token;
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast('คัดลอกลิงก์แชร์แล้ว!');
+        } catch {
+            prompt('คัดลอกลิงก์นี้:', url);
+        }
+    } else {
+        showToast('ไม่สามารถสร้างลิงก์แชร์ได้', 'error');
+    }
+}
+
+async function deleteAlbum(id) {
+    if (!confirm('ลบอัลบั้มนี้? รูปภาพทั้งหมดจะถูกลบด้วย')) return;
+    const res = await api('api/vehicles.php', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    if (res.success) {
+        showToast('ลบอัลบั้มเรียบร้อยแล้ว');
+        navigateTo('vehicles');
+    }
 }
 
 // ===== LIGHTBOX =====

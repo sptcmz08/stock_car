@@ -38,6 +38,7 @@ CREATE TABLE `vehicles` (
     `selling_price` DECIMAL(12,2) NOT NULL DEFAULT 0,
     `branch_id` INT DEFAULT NULL,
     `status` ENUM('available','reserved','sold','maintenance') NOT NULL DEFAULT 'available',
+    `share_token` VARCHAR(64) DEFAULT NULL,
     `notes` TEXT,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
