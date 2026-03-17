@@ -618,21 +618,21 @@ async function downloadAlbum(id) {
     const imgs = window._detailImages || [];
     if (!imgs.length) return showToast('ไม่มีรูปภาพ', 'error');
     showToast('กำลังดาวน์โหลด ' + imgs.length + ' รูป...');
-    for (let i = 0; i < imgs.length; i++) {
+    const downloads = imgs.map(async (img) => {
         try {
-            const res = await fetch('uploads/' + imgs[i].filename);
+            const res = await fetch('uploads/' + img.filename);
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = imgs[i].filename;
+            a.download = img.filename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            if (i < imgs.length - 1) await new Promise(r => setTimeout(r, 500));
         } catch (e) { console.error('Download error:', e); }
-    }
+    });
+    await Promise.all(downloads);
     showToast('ดาวน์โหลดเสร็จแล้ว!');
 }
 
