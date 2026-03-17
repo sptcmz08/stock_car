@@ -83,6 +83,22 @@ $imgCount = count($images);
         }
         .section { margin-bottom: 12px; }
 
+        /* Desktop: 2-column layout */
+        @media (min-width: 768px) {
+            .wrap {
+                max-width: 1000px;
+                padding: 24px 32px;
+            }
+            .desktop-grid {
+                display: grid;
+                grid-template-columns: 1.2fr 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+            .desktop-left { position: sticky; top: 24px; }
+            .carousel-main { aspect-ratio: 16/10; }
+        }
+
         /* ===== BRAND BAR ===== */
         .brand-bar {
             display: flex;
@@ -391,6 +407,8 @@ $imgCount = count($images);
         </div>
 
         <!-- Image Carousel Card -->
+        <div class="desktop-grid">
+        <div class="desktop-left">
         <?php if ($images): ?>
         <div class="carousel-card section" id="carouselCard">
             <div class="carousel-main" onclick="openLB(window._cIdx||0)">
@@ -418,6 +436,22 @@ $imgCount = count($images);
         </div>
         <?php endif; ?>
 
+        <!-- More Photos Grid (desktop: under carousel) -->
+        <?php if ($imgCount > 1): ?>
+        <div class="more-photos section desktop-photos">
+            <div class="more-title">รูปภาพทั้งหมด</div>
+            <div class="pho-grid">
+                <?php foreach ($images as $i => $img): ?>
+                <div class="pho-item" onclick="openLB(<?= $i ?>)">
+                    <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" alt="" loading="lazy">
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        </div><!-- /desktop-left -->
+
+        <div class="desktop-right">
         <!-- Title + Price -->
         <div class="info-main section">
             <div class="info-name"><?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?></div>
@@ -446,20 +480,6 @@ $imgCount = count($images);
             </div>
         </div>
 
-        <!-- More Photos Grid -->
-        <?php if ($imgCount > 1): ?>
-        <div class="more-photos section">
-            <div class="more-title">รูปภาพทั้งหมด</div>
-            <div class="pho-grid">
-                <?php foreach ($images as $i => $img): ?>
-                <div class="pho-item" onclick="openLB(<?= $i ?>)">
-                    <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" alt="" loading="lazy">
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php endif; ?>
-
         <!-- Actions -->
         <?php if ($imgCount > 0): ?>
         <div class="act-row section">
@@ -476,6 +496,8 @@ $imgCount = count($images);
             <?= nl2br(htmlspecialchars($vehicle['notes'])) ?>
         </div>
         <?php endif; ?>
+        </div><!-- /desktop-right -->
+        </div><!-- /desktop-grid -->
 
         <!-- Footer -->
         <div class="s-footer">
