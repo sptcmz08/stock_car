@@ -382,15 +382,30 @@ function renderVehicleGrid(vehicles) {
     }
 
     grid.innerHTML = vehicles.map((v, i) => {
-        const img = v.images && v.images.length ? `<img src="uploads/${v.images[0].filename}" class="vehicle-image" alt="${v.brand} ${v.model}" loading="lazy">` : `<div class="no-image"><i class='bx bxs-car'></i></div>`;
+        const hasMultiImg = v.images && v.images.length > 1;
+        const imgHtml = v.images && v.images.length
+            ? `<div class="card-slider" data-vid="${v.id}">
+                ${v.images.map((img, idx) => `<img src="uploads/${img.filename}" class="card-slide ${idx === 0 ? 'active' : ''}" alt="" loading="lazy">`).join('')}
+                ${hasMultiImg ? `<div class="card-dots">${v.images.map((_, idx) => `<span class="card-dot ${idx === 0 ? 'active' : ''}"></span>`).join('')}</div>` : ''}
+               </div>`
+            : `<div class="no-image"><i class='bx bxs-car'></i></div>`;
         const branchTag = v.branch_name ? `<span class="branch-tag" style="background:${v.branch_color}20;color:${v.branch_color};font-size:11px;"><i class='bx bxs-map-pin'></i> ${v.branch_name}</span>` : '';
 
         return `
         <div class="glass-card vehicle-card cursor-pointer" onclick="navigateTo('detail', ${v.id})" style="animation-delay:${i * 0.05}s">
             <div class="relative overflow-hidden">
-                ${img}
+                ${imgHtml}
                 <div class="absolute top-3 left-3">${getStatusBadge(v.status)}</div>
-                ${v.images && v.images.length > 1 ? `<div class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full"><i class='bx bxs-image'></i> ${v.images.length}</div>` : ''}
+                <button class="card-menu-btn" onclick="event.stopPropagation(); toggleCardMenu(${v.id})">
+                    <i class='bx bx-dots-vertical-rounded'></i>
+                </button>
+                <div class="card-dropdown" id="cardMenu_${v.id}">
+                    <button onclick="event.stopPropagation(); navigateTo('detail', ${v.id})"><i class='bx bx-images'></i> ดูอัลบั้ม</button>
+                    <button onclick="event.stopPropagation(); openVehicleModal(${v.id}); closeAllCardMenus();"><i class='bx bx-edit'></i> แก้ไข</button>
+                    <button onclick="event.stopPropagation(); downloadAlbum(${v.id}); closeAllCardMenus();"><i class='bx bx-download'></i> ดาวน์โหลด</button>
+                    <button onclick="event.stopPropagation(); shareAlbum(${v.id}); closeAllCardMenus();"><i class='bx bx-share-alt'></i> แชร์</button>
+                    <button class="text-red-400" onclick="event.stopPropagation(); deleteAlbum(${v.id}); closeAllCardMenus();"><i class='bx bx-trash'></i> ลบ</button>
+                </div>
             </div>
             <div class="p-4">
                 <div class="flex items-start justify-between mb-1">
@@ -411,7 +426,51 @@ function renderVehicleGrid(vehicles) {
             </div>
         </div>`;
     }).join('');
+
+    // Start auto-slide for all cards
+    startCardSliders();
 }
+
+// ===== CARD SLIDER & MENU =====
+function startCardSliders() {
+    // Clear any existing intervals
+    if (window._cardSliderIntervals) {
+        window._cardSliderIntervals.forEach(id => clearInterval(id));
+    }
+    window._cardSliderIntervals = [];
+
+    document.querySelectorAll('.card-slider').forEach(slider => {
+        const slides = slider.querySelectorAll('.card-slide');
+        const dots = slider.querySelectorAll('.card-dot');
+        if (slides.length <= 1) return;
+        let cur = 0;
+        const interval = setInterval(() => {
+            slides[cur].classList.remove('active');
+            if (dots[cur]) dots[cur].classList.remove('active');
+            cur = (cur + 1) % slides.length;
+            slides[cur].classList.add('active');
+            if (dots[cur]) dots[cur].classList.add('active');
+        }, 3000);
+        window._cardSliderIntervals.push(interval);
+    });
+}
+
+function toggleCardMenu(vid) {
+    closeAllCardMenus();
+    const menu = document.getElementById('cardMenu_' + vid);
+    if (menu) menu.classList.add('show');
+}
+
+function closeAllCardMenus() {
+    document.querySelectorAll('.card-dropdown').forEach(d => d.classList.remove('show'));
+}
+
+// Close card menus on click outside
+document.addEventListener('click', e => {
+    if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-dropdown')) {
+        closeAllCardMenus();
+    }
+});
 
 // ===== SEARCH & FILTER =====
 function debounceSearch() {

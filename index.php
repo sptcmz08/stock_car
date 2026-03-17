@@ -20,7 +20,7 @@ if (!isset($_SESSION['user_id'])) {
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=5">
+    <link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 <body>
     <!-- ===== Top Header ===== -->
@@ -239,6 +239,6 @@ if (!isset($_SESSION['user_id'])) {
     <div id="modalContainer"></div>
 
     <!-- ===== App JS ===== -->
-    <script src="assets/js/app.js?v=7"></script>
+    <script src="assets/js/app.js?v=8"></script>
 </body>
 </html>

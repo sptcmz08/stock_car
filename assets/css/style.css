@@ -995,3 +995,96 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     background: rgba(249, 115, 22, 0.05);
     border-radius: 12px;
 }
+
+/* ===== CARD SLIDER ===== */
+.card-slider {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: #1e293b;
+}
+.card-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+.card-slide.active { opacity: 1; }
+.card-dots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+}
+.card-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    transition: all 0.3s;
+}
+.card-dot.active {
+    background: #f97316;
+    width: 16px;
+    border-radius: 3px;
+}
+
+/* ===== CARD MENU ===== */
+.card-menu-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: background 0.2s;
+}
+.card-menu-btn:hover { background: rgba(0,0,0,0.7); }
+.card-dropdown {
+    position: absolute;
+    top: 44px;
+    right: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 10px;
+    padding: 4px;
+    min-width: 160px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: none;
+    z-index: 20;
+}
+.card-dropdown.show { display: block; }
+.card-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+.card-dropdown button:hover { background: rgba(255,255,255,0.08); }
+.card-dropdown button i { font-size: 16px; opacity: 0.7; }
