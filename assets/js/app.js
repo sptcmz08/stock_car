@@ -817,17 +817,28 @@ function openVehicleModal(editId) {
                     <label class="form-label">หมายเหตุ</label>
                     <textarea name="notes" class="form-input" rows="2" placeholder="หมายเหตุเพิ่มเติม...">${escapeHtml(formData.notes)}</textarea>
                 </div>
-                ${!isEdit ? `
-                <div class="mb-4">
-                    <label class="form-label">รูปภาพ</label>
-                    <div class="upload-zone" onclick="document.getElementById('vehicleImages').click()" id="modalUploadZone">
-                        <input type="file" id="vehicleImages" name="images" multiple accept="image/*" hidden onchange="previewModalImages(this)">
-                        <i class='bx bx-cloud-upload'></i>
-                        <p class="text-sm text-slate-500">คลิกเพื่ออัพโหลดรูปภาพ</p>
+                ${isEdit && formData.images && formData.images.length ? `
+                <div class="mb-3">
+                    <label class="form-label">รูปภาพที่อัพโหลดแล้ว (${formData.images.length} รูป)</label>
+                    <div class="modal-img-grid">
+                        ${formData.images.map(img => `
+                            <div class="modal-img-item">
+                                <img src="uploads/${img.filename}" alt="">
+                                <button type="button" onclick="deleteImageFromModal(${img.id}, ${editId})" class="modal-img-delete"><i class='bx bx-x'></i></button>
+                            </div>
+                        `).join('')}
                     </div>
-                    <div class="upload-preview" id="modalPreview"></div>
                 </div>
                 ` : ''}
+                <div class="mb-4">
+                    <label class="form-label">${isEdit ? 'เพิ่มรูปภาพ' : 'รูปภาพ'}</label>
+                    <div class="upload-zone" onclick="document.getElementById('vehicleImages').click()" id="modalUploadZone">
+                        <input type="file" id="vehicleImages" name="images" multiple accept="image/*" hidden onchange="${isEdit ? `uploadMoreImagesFromModal(${editId})` : 'previewModalImages(this)'}">
+                        <i class='bx bx-cloud-upload'></i>
+                        <p class="text-sm text-slate-500">คลิกเพื่อ${isEdit ? 'เพิ่ม' : 'อัพโหลด'}รูปภาพ</p>
+                    </div>
+                    ${!isEdit ? '<div class="upload-preview" id="modalPreview"></div>' : ''}
+                </div>
                 <div class="flex gap-3">
                     <button type="button" onclick="closeModal('vehicleModal')" class="btn-secondary flex-1 justify-center">ยกเลิก</button>
                     <button type="submit" class="btn-primary flex-1 justify-center" id="submitVehicleBtn">${isEdit ? 'บันทึก' : 'เพิ่มรถ'}</button>
@@ -1030,6 +1041,40 @@ async function deleteImage(imageId) {
     }
 }
 
+async function deleteImageFromModal(imageId, vehicleId) {
+    if (!confirm('ลบรูปนี้?')) return;
+    const result = await api('api/vehicle_images.php', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: imageId })
+    });
+    if (result.success) {
+        showToast('ลบรูปเรียบร้อย');
+        closeModal('vehicleModal');
+        openVehicleModal(vehicleId);
+    } else {
+        showToast(result.error || 'ไม่สามารถลบรูปได้', 'error');
+    }
+}
+
+async function uploadMoreImagesFromModal(vehicleId) {
+    const input = document.getElementById('vehicleImages');
+    if (!input || !input.files.length) return;
+
+    const fd = new FormData();
+    fd.append('vehicle_id', vehicleId);
+    for (let f of input.files) fd.append('images[]', f);
+
+    showToast('กำลังอัพโหลด...', 'info');
+    const result = await api('api/vehicle_images.php', { method: 'POST', body: fd });
+    if (result.success) {
+        showToast(result.message);
+        closeModal('vehicleModal');
+        openVehicleModal(vehicleId);
+    } else {
+        showToast(result.error || 'อัพโหลดไม่สำเร็จ', 'error');
+    }
+}
 // ===== BRANCHES =====
 async function loadBranches() {
     const data = await api('api/branches.php');

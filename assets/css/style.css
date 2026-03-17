@@ -1088,3 +1088,39 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 }
 .card-dropdown button:hover { background: rgba(255,255,255,0.08); }
 .card-dropdown button i { font-size: 16px; opacity: 0.7; }
+
+/* ===== MODAL IMAGE GRID ===== */
+.modal-img-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+.modal-img-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.modal-img-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+}
+.modal-img-delete {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.85);
+    color: white;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.modal-img-delete:hover { background: #ef4444; }
