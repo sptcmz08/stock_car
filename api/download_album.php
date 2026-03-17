@@ -1,29 +1,33 @@
 <?php
 /**
  * Download Album API - ZIP all vehicle images
+ * Supports both logged-in users (by ID) and public share (by token)
  */
 require_once __DIR__ . '/../config.php';
 
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo 'Unauthorized';
-    exit;
-}
-
 $vehicleId = intval($_GET['id'] ?? 0);
-if (!$vehicleId) {
-    http_response_code(400);
-    echo 'Missing vehicle ID';
-    exit;
-}
+$token = $_GET['token'] ?? '';
 
 $db = getDB();
 
-// Get vehicle info
-$stmt = $db->prepare("SELECT brand, model FROM vehicles WHERE id = ?");
-$stmt->execute([$vehicleId]);
-$vehicle = $stmt->fetch();
+if ($token) {
+    // Public access via share token
+    $stmt = $db->prepare("SELECT id, brand, model FROM vehicles WHERE id = ? AND share_token = ?");
+    $stmt->execute([$vehicleId, $token]);
+    $vehicle = $stmt->fetch();
+} else {
+    // Authenticated access
+    session_start();
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo 'Unauthorized';
+        exit;
+    }
+    $stmt = $db->prepare("SELECT id, brand, model FROM vehicles WHERE id = ?");
+    $stmt->execute([$vehicleId]);
+    $vehicle = $stmt->fetch();
+}
+
 if (!$vehicle) {
     http_response_code(404);
     echo 'Vehicle not found';
@@ -32,7 +36,7 @@ if (!$vehicle) {
 
 // Get images
 $stmt = $db->prepare("SELECT filename FROM vehicle_images WHERE vehicle_id = ? ORDER BY sort_order");
-$stmt->execute([$vehicleId]);
+$stmt->execute([$vehicle['id']]);
 $images = $stmt->fetchAll();
 
 if (empty($images)) {
