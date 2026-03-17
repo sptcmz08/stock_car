@@ -1,7 +1,7 @@
 <?php
 /**
- * Public Share Page - View vehicle album without login
- * Premium mobile-friendly design
+ * Public Share Page — Premium Customer-Facing Vehicle Listing
+ * Dara Autocar
  */
 require_once __DIR__ . '/config.php';
 
@@ -28,38 +28,42 @@ $stmt->execute([$vehicle['id']]);
 $images = $stmt->fetchAll();
 
 $statusMap = [
-    'available' => ['label' => 'พร้อมขาย', 'color' => '#22c55e', 'icon' => '🟢'],
-    'reserved' => ['label' => 'จอง', 'color' => '#f59e0b', 'icon' => '🟡'],
-    'sold' => ['label' => 'ขายแล้ว', 'color' => '#ef4444', 'icon' => '🔴'],
-    'maintenance' => ['label' => 'ซ่อม', 'color' => '#6366f1', 'icon' => '🔵'],
+    'available' => ['label' => 'พร้อมขาย', 'color' => '#22c55e', 'bg' => '#22c55e22'],
+    'reserved'  => ['label' => 'จอง', 'color' => '#f59e0b', 'bg' => '#f59e0b22'],
+    'sold'      => ['label' => 'ขายแล้ว', 'color' => '#ef4444', 'bg' => '#ef444422'],
+    'maintenance' => ['label' => 'ซ่อมบำรุง', 'color' => '#6366f1', 'bg' => '#6366f122'],
 ];
 $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
+$imgCount = count($images);
 ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
-    <title><?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?> - อัลบั้มรถ</title>
+    <title><?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?> | Dara Autocar</title>
     <meta name="description" content="<?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model'] . ' ปี ' . $vehicle['year'] . ' ราคา ฿' . number_format($vehicle['selling_price'])) ?>">
-    <meta property="og:title" content="<?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?> <?= $vehicle['year'] ?>">
-    <meta property="og:description" content="ราคา ฿<?= number_format($vehicle['selling_price']) ?>">
+    <meta property="og:title" content="<?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?> <?= $vehicle['year'] ?> | Dara Autocar">
+    <meta property="og:description" content="ราคา ฿<?= number_format($vehicle['selling_price']) ?> • <?= $vehicle['color'] ?>">
     <?php if ($images): ?>
     <meta property="og:image" content="uploads/<?= htmlspecialchars($images[0]['filename']) ?>">
     <?php endif; ?>
     
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --accent: #f97316;
-            --bg: #0f172a;
-            --card: #1e293b;
-            --border: rgba(255,255,255,0.08);
+            --accent2: #fb923c;
+            --bg: #0c1322;
+            --card: rgba(30,41,59,0.7);
+            --border: rgba(255,255,255,0.06);
             --text: #f1f5f9;
             --text2: #94a3b8;
+            --text3: #64748b;
+            --radius: 16px;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -69,64 +73,222 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
         }
-        
-        /* Header Bar */
-        .share-topbar {
-            padding: 20px 16px;
-            border-bottom: 1px solid var(--border);
+
+        /* ===== HERO GALLERY ===== */
+        .hero {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            max-height: 480px;
+            overflow: hidden;
+            background: #1e293b;
         }
-        
-        /* Content */
-        .content {
-            max-width: 640px;
-            margin: 0 auto;
-            padding: 0 16px;
+        .hero img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
-        
-        /* Vehicle Title Card */
-        .title-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 12px;
+        .hero img.active { opacity: 1; }
+        .hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: linear-gradient(transparent, rgba(12,19,34,0.9));
+            pointer-events: none;
         }
-        .title-card h1 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 4px;
+        .hero-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(12px);
+            z-index: 2;
         }
-        .title-card .sub {
-            color: var(--text2);
-            font-size: 13px;
+        .hero-dots {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            align-items: center;
             gap: 6px;
-            flex-wrap: wrap;
+            z-index: 2;
         }
-        .title-card .price {
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-top: 12px;
+        .hero-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        .title-card .branch-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            padding: 3px 8px;
+        .hero-dot.active {
+            background: var(--accent);
+            width: 24px;
+            border-radius: 4px;
+        }
+        .hero-count {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
             border-radius: 6px;
             font-size: 11px;
+            color: rgba(255,255,255,0.8);
+            z-index: 2;
+        }
+        .hero-no-img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            max-height: 480px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== CONTENT ===== */
+        .wrap {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 16px 32px;
+        }
+
+        /* Price Bar */
+        .price-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .price-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .price-label {
+            font-size: 11px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        /* Title Section */
+        .title-section {
+            padding: 20px 0;
+        }
+        .title-section h1 {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+        .title-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.05);
+            color: var(--text2);
+        }
+        .tag i { font-size: 14px; }
+        .tag.branch {
             font-weight: 600;
         }
-        
-        /* Action Buttons */
-        .actions {
+
+        /* Specs Grid */
+        .specs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .spec-item {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            text-align: center;
+        }
+        .spec-item .spec-icon {
+            font-size: 20px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .spec-item .spec-val {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .spec-item .spec-label {
+            font-size: 11px;
+            color: var(--text3);
+        }
+
+        /* Photo Thumbnails */
+        .thumbs-section { margin: 16px 0; }
+        .thumbs-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .thumbs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .thumb {
+            aspect-ratio: 1;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .thumb:active img { transform: scale(1.08); }
+        @media (min-width: 480px) { .thumb:hover img { transform: scale(1.08); } }
+
+        /* Actions */
+        .actions-bar {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin: 16px 0;
         }
-        .action-btn {
+        .act-btn {
             flex: 1;
             display: flex;
             align-items: center;
@@ -134,8 +296,9 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             gap: 6px;
             padding: 12px;
             border-radius: 12px;
-            background: var(--card);
             border: 1px solid var(--border);
+            background: var(--card);
+            backdrop-filter: blur(10px);
             color: var(--text);
             font-size: 13px;
             font-weight: 500;
@@ -144,84 +307,45 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             transition: all 0.2s;
             text-decoration: none;
         }
-        .action-btn:active { transform: scale(0.97); }
-        .action-btn i { font-size: 18px; }
-        .action-btn.primary {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-        .action-btn.primary:hover { opacity: 0.9; }
-        
-        /* Photo Grid */
-        .photo-section {
-            margin-bottom: 12px;
-        }
-        .photo-section h2 {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text2);
-            padding: 8px 4px;
-        }
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 3px;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .photo-item {
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .photo-item img {
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.3s;
-        }
-        .photo-item:active img { transform: scale(1.05); }
-        @media (min-width: 480px) {
-            .photo-item:hover img { transform: scale(1.05); }
-        }
-        
-        /* Info Card */
-        .info-card {
+        .act-btn:active { transform: scale(0.97); }
+        .act-btn i { font-size: 17px; }
+
+        /* Notes */
+        .notes-card {
             background: var(--card);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 12px;
-        }
-        .info-card h3 {
+            border-radius: var(--radius);
+            padding: 16px;
+            margin: 16px 0;
             font-size: 14px;
-            font-weight: 600;
             color: var(--text2);
-            margin-bottom: 12px;
+            line-height: 1.6;
         }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-        }
-        .info-row:last-child { border-bottom: none; }
-        .info-row .label { color: var(--text2); }
-        .info-row .value { font-weight: 500; text-align: right; }
-        
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 24px 16px 40px;
-            color: var(--text2);
+        .notes-card strong {
+            display: block;
+            color: var(--text);
             font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
         }
-        
-        /* Lightbox */
+
+        /* Footer */
+        .share-footer {
+            text-align: center;
+            padding: 24px 0 40px;
+            font-size: 11px;
+            color: var(--text3);
+            border-top: 1px solid var(--border);
+            margin-top: 16px;
+        }
+        .share-footer .brand {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* ===== LIGHTBOX ===== */
         .lb {
             position: fixed;
             inset: 0;
@@ -229,26 +353,26 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             z-index: 200;
             display: flex;
             flex-direction: column;
-            animation: lbIn 0.2s ease;
+            animation: lbFade 0.2s ease;
         }
-        @keyframes lbIn { from { opacity:0 } to { opacity:1 } }
-        .lb-header {
+        @keyframes lbFade { from { opacity:0 } to { opacity:1 } }
+        .lb-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 12px 16px;
             flex-shrink: 0;
         }
-        .lb-counter {
+        .lb-cnt {
             font-size: 14px;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.5);
             font-weight: 500;
         }
         .lb-btn {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.08);
             color: white;
             border: none;
             font-size: 22px;
@@ -256,50 +380,33 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
-            -webkit-tap-highlight-color: transparent;
         }
-        .lb-btn:active { background: rgba(255,255,255,0.25); }
-        .lb-body {
+        .lb-btn:active { background: rgba(255,255,255,0.2); }
+        .lb-img {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            position: relative;
         }
-        .lb-body img {
+        .lb-img img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
             user-select: none;
-            -webkit-user-drag: none;
         }
-        .lb-nav {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 25%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: transparent;
-        }
-        .lb-nav.prev { left: 0; }
-        .lb-nav.next { right: 0; }
-        .lb-footer {
+        .lb-bot {
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 16px;
-            gap: 12px;
             flex-shrink: 0;
         }
-        .lb-save {
+        .lb-dl {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 10px 20px;
+            padding: 10px 24px;
             border-radius: 10px;
             background: var(--accent);
             color: white;
@@ -309,65 +416,102 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             font-family: inherit;
             cursor: pointer;
         }
-        .lb-save:active { opacity: 0.8; }
+        .lb-dl:active { opacity: 0.8; }
         
-        /* Safe area for mobile */
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            .lb-footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
-            .footer { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+            .lb-bot { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+            .share-footer { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
         }
     </style>
 </head>
 <body>
-    <!-- Top Bar -->
-    <div class="share-topbar">
-        <div class="content" style="padding:0 16px;">
-            <div style="display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;">
-                <i class='bx bxs-car' style="color:var(--accent);font-size:18px;"></i>
-                Dara Autocar Album
-            </div>
-        </div>
-    </div>
 
-    <div class="content">
-        <!-- Title Card -->
-        <div class="title-card">
+    <!-- Hero Image Gallery -->
+    <?php if ($images): ?>
+    <div class="hero" onclick="openLB(window._heroIdx || 0)">
+        <?php foreach ($images as $i => $img): ?>
+        <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" class="<?= $i === 0 ? 'active' : '' ?>" alt="" <?= $i > 0 ? 'loading="lazy"' : '' ?>>
+        <?php endforeach; ?>
+        <div class="hero-overlay"></div>
+        <div class="hero-badge" style="background:<?= $st['bg'] ?>;color:<?= $st['color'] ?>"><?= $st['label'] ?></div>
+        <?php if ($imgCount > 1): ?>
+        <div class="hero-dots">
+            <?php for ($i = 0; $i < min($imgCount, 8); $i++): ?>
+            <div class="hero-dot <?= $i === 0 ? 'active' : '' ?>" onclick="event.stopPropagation();goHero(<?= $i ?>)"></div>
+            <?php endfor; ?>
+        </div>
+        <?php endif; ?>
+        <div class="hero-count"><i class='bx bx-images'></i> <?= $imgCount ?></div>
+    </div>
+    <?php else: ?>
+    <div class="hero-no-img">
+        <i class='bx bxs-car' style="font-size:80px;color:rgba(249,115,22,0.12)"></i>
+    </div>
+    <?php endif; ?>
+
+    <div class="wrap">
+        <!-- Price -->
+        <div class="price-bar">
+            <div>
+                <div class="price-label">ราคา</div>
+                <div class="price-value">฿<?= number_format($vehicle['selling_price']) ?></div>
+            </div>
+            <?php if ($vehicle['branch_name']): ?>
+            <span class="tag branch" style="background:<?= $vehicle['branch_color'] ?>18;color:<?= $vehicle['branch_color'] ?>">
+                <i class='bx bxs-map-pin'></i> <?= htmlspecialchars($vehicle['branch_name']) ?>
+            </span>
+            <?php endif; ?>
+        </div>
+
+        <!-- Title -->
+        <div class="title-section">
             <h1><?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?></h1>
-            <div class="sub">
-                <span><?= $vehicle['year'] ?></span>
+            <div class="title-tags">
+                <span class="tag"><i class='bx bx-calendar'></i> <?= $vehicle['year'] ?></span>
                 <?php if ($vehicle['color']): ?>
-                <span>•</span><span><?= htmlspecialchars($vehicle['color']) ?></span>
+                <span class="tag"><i class='bx bx-palette'></i> <?= htmlspecialchars($vehicle['color']) ?></span>
                 <?php endif; ?>
                 <?php if ($vehicle['license_plate']): ?>
-                <span>•</span><span><?= htmlspecialchars($vehicle['license_plate']) ?></span>
+                <span class="tag"><i class='bx bx-id-card'></i> <?= htmlspecialchars($vehicle['license_plate']) ?></span>
                 <?php endif; ?>
             </div>
-            <div class="price">฿<?= number_format($vehicle['selling_price']) ?></div>
-            <?php if ($vehicle['branch_name']): ?>
-            <div style="margin-top:8px">
-                <span class="branch-tag" style="background:<?= $vehicle['branch_color'] ?>20;color:<?= $vehicle['branch_color'] ?>">
-                    <i class='bx bxs-map-pin'></i> <?= htmlspecialchars($vehicle['branch_name']) ?>
-                </span>
+        </div>
+
+        <!-- Specs Grid -->
+        <div class="specs">
+            <div class="spec-item">
+                <div class="spec-icon"><i class='bx bx-calendar'></i></div>
+                <div class="spec-val"><?= $vehicle['year'] ?></div>
+                <div class="spec-label">ปี</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-icon"><i class='bx bx-tachometer'></i></div>
+                <div class="spec-val"><?= number_format($vehicle['mileage']) ?></div>
+                <div class="spec-label">กิโลเมตร</div>
+            </div>
+            <?php if ($vehicle['color']): ?>
+            <div class="spec-item">
+                <div class="spec-icon"><i class='bx bx-palette'></i></div>
+                <div class="spec-val"><?= htmlspecialchars($vehicle['color']) ?></div>
+                <div class="spec-label">สี</div>
+            </div>
+            <?php endif; ?>
+            <?php if ($vehicle['license_plate']): ?>
+            <div class="spec-item">
+                <div class="spec-icon"><i class='bx bx-id-card'></i></div>
+                <div class="spec-val"><?= htmlspecialchars($vehicle['license_plate']) ?></div>
+                <div class="spec-label">ทะเบียน</div>
             </div>
             <?php endif; ?>
         </div>
 
-        <!-- Action Buttons -->
-        <?php if ($images): ?>
-        <div class="actions">
-            <a href="api/download_album.php?id=<?= $vehicle['id'] ?>&token=<?= $token ?>" class="action-btn primary">
-                <i class='bx bx-download'></i> ดาวน์โหลดทั้งหมด (<?= count($images) ?>)
-            </a>
-        </div>
-        <?php endif; ?>
-
-        <!-- Photo Grid -->
-        <?php if ($images): ?>
-        <div class="photo-section">
-            <h2><i class='bx bx-images'></i> รูปภาพทั้งหมด (<?= count($images) ?>)</h2>
-            <div class="photo-grid">
+        <!-- Photo Thumbnails -->
+        <?php if ($imgCount > 1): ?>
+        <div class="thumbs-section">
+            <div class="thumbs-title">รูปภาพ <?= $imgCount ?> รูป</div>
+            <div class="thumbs-grid">
                 <?php foreach ($images as $i => $img): ?>
-                <div class="photo-item" onclick="openLB(<?= $i ?>)">
+                <div class="thumb" onclick="openLB(<?= $i ?>)">
                     <img src="uploads/<?= htmlspecialchars($img['filename']) ?>" alt="" loading="lazy">
                 </div>
                 <?php endforeach; ?>
@@ -375,50 +519,61 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
         </div>
         <?php endif; ?>
 
-        <!-- Info Card -->
-        <div class="info-card">
-            <h3><i class='bx bx-car'></i> ข้อมูลรถ</h3>
-            <?php if ($vehicle['license_plate']): ?>
-            <div class="info-row">
-                <span class="label">ทะเบียน</span>
-                <span class="value"><?= htmlspecialchars($vehicle['license_plate']) ?></span>
-            </div>
-            <?php endif; ?>
-            <div class="info-row">
-                <span class="label">ปี</span>
-                <span class="value"><?= $vehicle['year'] ?></span>
-            </div>
-            <?php if ($vehicle['color']): ?>
-            <div class="info-row">
-                <span class="label">สี</span>
-                <span class="value"><?= htmlspecialchars($vehicle['color']) ?></span>
-            </div>
-            <?php endif; ?>
-            <div class="info-row">
-                <span class="label">เลขไมล์</span>
-                <span class="value"><?= number_format($vehicle['mileage']) ?> กม.</span>
-            </div>
-            <div class="info-row">
-                <span class="label">ราคาขาย</span>
-                <span class="value" style="color:var(--accent);font-weight:700">฿<?= number_format($vehicle['selling_price']) ?></span>
-            </div>
-            <?php if ($vehicle['notes']): ?>
-            <div class="info-row">
-                <span class="label">หมายเหตุ</span>
-                <span class="value" style="color:var(--text2)"><?= htmlspecialchars($vehicle['notes']) ?></span>
-            </div>
-            <?php endif; ?>
+        <!-- Actions -->
+        <?php if ($imgCount > 0): ?>
+        <div class="actions-bar">
+            <a href="api/download_album.php?id=<?= $vehicle['id'] ?>&token=<?= $token ?>" class="act-btn">
+                <i class='bx bx-download'></i> ดาวน์โหลดรูป
+            </a>
         </div>
+        <?php endif; ?>
 
-        <div class="footer">
-            แชร์โดย Dara Autocar
+        <!-- Notes -->
+        <?php if ($vehicle['notes']): ?>
+        <div class="notes-card">
+            <strong>หมายเหตุ</strong>
+            <?= nl2br(htmlspecialchars($vehicle['notes'])) ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Footer -->
+        <div class="share-footer">
+            <span class="brand">Dara Autocar</span>
         </div>
     </div>
 
-    <!-- Lightbox -->
+    <!-- Lightbox & Scripts -->
     <script>
     const imgs = <?= json_encode(array_map(function($img) { return $img['filename']; }, $images)) ?>;
-    
+    window._heroIdx = 0;
+
+    // Hero auto-slide
+    <?php if ($imgCount > 1): ?>
+    (function() {
+        const slides = document.querySelectorAll('.hero img');
+        const dots = document.querySelectorAll('.hero-dot');
+        let cur = 0;
+        setInterval(() => {
+            slides[cur].classList.remove('active');
+            if (dots[cur]) dots[cur].classList.remove('active');
+            cur = (cur + 1) % slides.length;
+            slides[cur].classList.add('active');
+            if (dots[cur]) dots[cur].classList.add('active');
+            window._heroIdx = cur;
+        }, 4000);
+    })();
+    <?php endif; ?>
+
+    function goHero(i) {
+        const slides = document.querySelectorAll('.hero img');
+        const dots = document.querySelectorAll('.hero-dot');
+        slides.forEach(s => s.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        slides[i].classList.add('active');
+        if (dots[i]) dots[i].classList.add('active');
+        window._heroIdx = i;
+    }
+
     function openLB(i) {
         let cur = i;
         const el = document.createElement('div');
@@ -426,74 +581,49 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
         render();
         document.body.appendChild(el);
         document.body.style.overflow = 'hidden';
-        
+
         function render() {
             el.innerHTML = `
-                <div class="lb-header">
+                <div class="lb-top">
                     <button class="lb-btn" onclick="closeLB(this)"><i class="bx bx-x"></i></button>
-                    <span class="lb-counter">${cur + 1} / ${imgs.length}</span>
+                    <span class="lb-cnt">${cur+1} / ${imgs.length}</span>
                     <div style="width:44px"></div>
                 </div>
-                <div class="lb-body">
-                    ${cur > 0 ? '<button class="lb-nav prev" onclick="navLB(-1,this)"></button>' : ''}
-                    <img src="uploads/${imgs[cur]}" alt="">
-                    ${cur < imgs.length - 1 ? '<button class="lb-nav next" onclick="navLB(1,this)"></button>' : ''}
-                </div>
-                <div class="lb-footer">
-                    <button class="lb-save" onclick="savePic(${cur})"><i class="bx bx-download"></i> บันทึกรูปนี้</button>
-                </div>
-            `;
+                <div class="lb-img"><img src="uploads/${imgs[cur]}" alt=""></div>
+                <div class="lb-bot">
+                    <button class="lb-dl" onclick="dlPic(${cur})"><i class="bx bx-download"></i> บันทึกรูปนี้</button>
+                </div>`;
         }
 
-        // Swipe support
-        let sx=0, sy=0;
-        el.addEventListener('touchstart', e => { sx=e.touches[0].clientX; sy=e.touches[0].clientY; }, {passive:true});
+        let sx=0;
+        el.addEventListener('touchstart', e => { sx=e.touches[0].clientX; }, {passive:true});
         el.addEventListener('touchend', e => {
             const dx = e.changedTouches[0].clientX - sx;
-            const dy = e.changedTouches[0].clientY - sy;
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-                cur = dx > 0 ? Math.max(0, cur-1) : Math.min(imgs.length-1, cur+1);
-                render();
-            }
+            if (Math.abs(dx) > 50) { cur = dx>0 ? Math.max(0,cur-1) : Math.min(imgs.length-1,cur+1); render(); }
         });
-        
-        // Keyboard
-        el._keyHandler = e => {
-            if (e.key === 'Escape') closeLB(el.querySelector('.lb-btn'));
-            if (e.key === 'ArrowLeft') { cur = Math.max(0,cur-1); render(); }
-            if (e.key === 'ArrowRight') { cur = Math.min(imgs.length-1,cur+1); render(); }
+        el._kh = e => {
+            if (e.key==='Escape') closeLB(el.querySelector('.lb-btn'));
+            if (e.key==='ArrowLeft') { cur=Math.max(0,cur-1); render(); }
+            if (e.key==='ArrowRight') { cur=Math.min(imgs.length-1,cur+1); render(); }
         };
-        document.addEventListener('keydown', el._keyHandler);
-        
-        window._curLB = { el, cur, render, setCur: c => { cur=c; render(); } };
-    }
-    
-    function navLB(dir, btn) {
-        const lb = window._curLB;
-        if (!lb) return;
-        lb.cur = Math.max(0, Math.min(imgs.length-1, lb.cur + dir));
-        lb.setCur(lb.cur);
+        document.addEventListener('keydown', el._kh);
     }
 
     function closeLB(btn) {
         const el = btn.closest('.lb');
-        if (el._keyHandler) document.removeEventListener('keydown', el._keyHandler);
+        if (el._kh) document.removeEventListener('keydown', el._kh);
         el.remove();
         document.body.style.overflow = '';
     }
 
-    async function savePic(i) {
+    async function dlPic(i) {
         try {
-            const res = await fetch('uploads/' + imgs[i]);
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
+            const r = await fetch('uploads/'+imgs[i]);
+            const b = await r.blob();
+            const u = URL.createObjectURL(b);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = imgs[i];
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            a.href=u; a.download=imgs[i]; document.body.appendChild(a); a.click();
+            document.body.removeChild(a); URL.revokeObjectURL(u);
         } catch(e) { alert('ดาวน์โหลดไม่สำเร็จ'); }
     }
     </script>
