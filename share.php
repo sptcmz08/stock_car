@@ -483,9 +483,9 @@ $imgCount = count($images);
         <!-- Actions -->
         <?php if ($imgCount > 0): ?>
         <div class="act-row section">
-            <a href="api/download_album.php?id=<?= $vehicle['id'] ?>&token=<?= $token ?>" class="act-btn">
-                <i class='bx bx-download'></i> ดาวน์โหลดรูป
-            </a>
+            <button class="act-btn" onclick="dlAll()" id="dlAllBtn">
+                <i class='bx bx-download'></i> ดาวน์โหลดรูปทั้งหมด (<?= $imgCount ?>)
+            </button>
         </div>
         <?php endif; ?>
 
@@ -583,6 +583,21 @@ $imgCount = count($images);
             a.href=u; a.download=imgs[i]; document.body.appendChild(a); a.click();
             document.body.removeChild(a); URL.revokeObjectURL(u);
         } catch(e) { alert('ดาวน์โหลดไม่สำเร็จ'); }
+    }
+
+    async function dlAll() {
+        const btn = document.getElementById('dlAllBtn');
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> กำลังดาวน์โหลด...';
+        btn.disabled = true;
+        for (let i = 0; i < imgs.length; i++) {
+            await dlPic(i);
+            if (i < imgs.length - 1) await new Promise(r => setTimeout(r, 600));
+        }
+        btn.innerHTML = '<i class="bx bx-check"></i> ดาวน์โหลดเสร็จแล้ว!';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bx bx-download"></i> ดาวน์โหลดรูปทั้งหมด (' + imgs.length + ')';
+            btn.disabled = false;
+        }, 2000);
     }
     </script>
 </body>
