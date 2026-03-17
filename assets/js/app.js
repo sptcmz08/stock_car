@@ -614,9 +614,26 @@ async function renameAlbum(id) {
     }
 }
 
-function downloadAlbum(id) {
-    window.location.href = 'api/download_album.php?id=' + id;
-    showToast('กำลังดาวน์โหลด...');
+async function downloadAlbum(id) {
+    const imgs = window._detailImages || [];
+    if (!imgs.length) return showToast('ไม่มีรูปภาพ', 'error');
+    showToast('กำลังดาวน์โหลด ' + imgs.length + ' รูป...');
+    for (let i = 0; i < imgs.length; i++) {
+        try {
+            const res = await fetch('uploads/' + imgs[i].filename);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = imgs[i].filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            if (i < imgs.length - 1) await new Promise(r => setTimeout(r, 500));
+        } catch (e) { console.error('Download error:', e); }
+    }
+    showToast('ดาวน์โหลดเสร็จแล้ว!');
 }
 
 async function shareAlbum(id) {

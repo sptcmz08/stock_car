@@ -239,6 +239,6 @@ if (!isset($_SESSION['user_id'])) {
     <div id="modalContainer"></div>
 
     <!-- ===== App JS ===== -->
-    <script src="assets/js/app.js?v=5"></script>
+    <script src="assets/js/app.js?v=6"></script>
 </body>
 </html>
