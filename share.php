@@ -70,53 +70,10 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Hero / Cover */
-        .hero {
-            position: relative;
-            width: 100%;
-            height: 320px;
-            overflow: hidden;
-        }
-        .hero img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(transparent 40%, rgba(15,23,42,0.95) 100%);
-        }
-        .hero-no-img {
-            width: 100%;
-            height: 320px;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .hero-badge {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-        }
-        .hero-count {
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        /* Header Bar */
+        .share-topbar {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--border);
         }
         
         /* Content */
@@ -124,9 +81,6 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
             max-width: 640px;
             margin: 0 auto;
             padding: 0 16px;
-            position: relative;
-            margin-top: -60px;
-            z-index: 2;
         }
         
         /* Vehicle Title Card */
@@ -365,23 +319,15 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
     </style>
 </head>
 <body>
-    <!-- Hero Cover -->
-    <?php if ($images): ?>
-    <div class="hero" onclick="openLB(0)">
-        <img src="uploads/<?= htmlspecialchars($images[0]['filename']) ?>" alt="">
-        <div class="hero-overlay"></div>
-        <div class="hero-badge" style="background:<?= $st['color'] ?>22; color:<?= $st['color'] ?>">
-            <?= $st['icon'] ?> <?= $st['label'] ?>
+    <!-- Top Bar -->
+    <div class="share-topbar">
+        <div class="content" style="padding:0 16px;">
+            <div style="display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;">
+                <i class='bx bxs-car' style="color:var(--accent);font-size:18px;"></i>
+                StockCar Album
+            </div>
         </div>
-        <?php if (count($images) > 1): ?>
-        <div class="hero-count"><i class='bx bx-images'></i> <?= count($images) ?></div>
-        <?php endif; ?>
     </div>
-    <?php else: ?>
-    <div class="hero-no-img">
-        <i class='bx bxs-car' style="font-size:80px;color:rgba(249,115,22,0.15)"></i>
-    </div>
-    <?php endif; ?>
 
     <div class="content">
         <!-- Title Card -->
@@ -416,9 +362,9 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
         <?php endif; ?>
 
         <!-- Photo Grid -->
-        <?php if (count($images) > 1): ?>
+        <?php if ($images): ?>
         <div class="photo-section">
-            <h2><i class='bx bx-images'></i> รูปภาพทั้งหมด</h2>
+            <h2><i class='bx bx-images'></i> รูปภาพทั้งหมด (<?= count($images) ?>)</h2>
             <div class="photo-grid">
                 <?php foreach ($images as $i => $img): ?>
                 <div class="photo-item" onclick="openLB(<?= $i ?>)">
@@ -452,12 +398,6 @@ $st = $statusMap[$vehicle['status']] ?? $statusMap['available'];
                 <span class="label">เลขไมล์</span>
                 <span class="value"><?= number_format($vehicle['mileage']) ?> กม.</span>
             </div>
-            <?php if ($vehicle['cost_price'] > 0): ?>
-            <div class="info-row">
-                <span class="label">ราคาทุน</span>
-                <span class="value">฿<?= number_format($vehicle['cost_price']) ?></span>
-            </div>
-            <?php endif; ?>
             <div class="info-row">
                 <span class="label">ราคาขาย</span>
                 <span class="value" style="color:var(--accent);font-weight:700">฿<?= number_format($vehicle['selling_price']) ?></span>
