@@ -207,7 +207,7 @@ function updateVehicle() {
     $fields = [];
     $params = [];
     
-    $allowedFields = ['brand', 'model', 'year', 'color', 'vin', 'license_plate', 'mileage', 'cost_price', 'selling_price', 'branch_id', 'status', 'notes'];
+    $allowedFields = ['brand', 'model', 'year', 'color', 'vin', 'license_plate', 'mileage', 'cost_price', 'selling_price', 'sold_price', 'sold_date', 'branch_id', 'status', 'notes'];
     $textFields = ['brand', 'model', 'color', 'vin', 'license_plate', 'notes'];
     $validStatuses = ['available', 'reserved', 'sold', 'maintenance'];
 

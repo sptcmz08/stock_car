@@ -9,3 +9,7 @@ ALTER TABLE `users` ADD CONSTRAINT `fk_users_branch` FOREIGN KEY (`branch_id`) R
 
 -- อัพเดท admin เดิมให้มี display_name
 UPDATE `users` SET `display_name` = 'Admin' WHERE `username` = 'admin';
+
+-- เพิ่มคอลัมน์ sold_date และ sold_price ใน vehicles
+ALTER TABLE `vehicles` ADD COLUMN `sold_date` DATE DEFAULT NULL AFTER `share_token`;
+ALTER TABLE `vehicles` ADD COLUMN `sold_price` DECIMAL(12,2) DEFAULT NULL AFTER `sold_date`;

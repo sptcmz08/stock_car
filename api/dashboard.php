@@ -25,7 +25,6 @@ if ($isBranch) {
     $branchWhere = ' WHERE v.branch_id = ?';
     $branchParams = [$userBranchId];
 }
-$branchWhereAnd = $isBranch ? ' AND v.branch_id = ?' : '';
 
 // Total vehicles
 $totalSql = "SELECT COUNT(*) FROM vehicles v" . ($isBranch ? " WHERE v.branch_id = ?" : "");
@@ -68,25 +67,65 @@ if ($isBranch) {
 $byBranch = $branchStmt->fetchAll();
 
 // No branch assigned
-if ($isBranch) {
-    $noBranch = 0;
-} else {
+$noBranch = 0;
+if (!$isBranch) {
     $noBranchStmt = $db->query("SELECT COUNT(*) FROM vehicles WHERE branch_id IS NULL");
     $noBranch = (int)$noBranchStmt->fetchColumn();
 }
 
-// Total cost and selling values
+// Financial: stock cost only (simplified)
 $valueSql = "SELECT 
-    COALESCE(SUM(cost_price), 0) as total_cost,
-    COALESCE(SUM(selling_price), 0) as total_selling,
     COALESCE(SUM(CASE WHEN status != 'sold' THEN cost_price ELSE 0 END), 0) as stock_cost,
-    COALESCE(SUM(CASE WHEN status != 'sold' THEN selling_price ELSE 0 END), 0) as stock_selling,
-    COALESCE(SUM(CASE WHEN status = 'sold' THEN selling_price ELSE 0 END), 0) as sold_revenue,
-    COALESCE(SUM(CASE WHEN status = 'sold' THEN cost_price ELSE 0 END), 0) as sold_cost
+    COALESCE(SUM(CASE WHEN status != 'sold' THEN selling_price ELSE 0 END), 0) as stock_selling
     FROM vehicles" . ($isBranch ? " WHERE branch_id = ?" : "");
 $valueStmt = $db->prepare($valueSql);
 $valueStmt->execute($branchParams);
 $values = $valueStmt->fetch();
+
+// Profit summary: sold vehicles with sold_date
+// Monthly profit (last 12 months)
+$profitSql = "SELECT 
+    DATE_FORMAT(COALESCE(sold_date, updated_at), '%Y-%m') as month,
+    COUNT(*) as count,
+    COALESCE(SUM(COALESCE(sold_price, selling_price)), 0) as revenue,
+    COALESCE(SUM(cost_price), 0) as cost,
+    COALESCE(SUM(COALESCE(sold_price, selling_price) - cost_price), 0) as profit
+    FROM vehicles
+    WHERE status = 'sold'" . ($isBranch ? " AND branch_id = ?" : "") . "
+    GROUP BY month
+    ORDER BY month DESC
+    LIMIT 12";
+$profitStmt = $db->prepare($profitSql);
+$profitStmt->execute($branchParams);
+$monthlyProfit = $profitStmt->fetchAll();
+
+// Yearly profit 
+$yearProfitSql = "SELECT 
+    DATE_FORMAT(COALESCE(sold_date, updated_at), '%Y') as year,
+    COUNT(*) as count,
+    COALESCE(SUM(COALESCE(sold_price, selling_price)), 0) as revenue,
+    COALESCE(SUM(cost_price), 0) as cost,
+    COALESCE(SUM(COALESCE(sold_price, selling_price) - cost_price), 0) as profit
+    FROM vehicles
+    WHERE status = 'sold'" . ($isBranch ? " AND branch_id = ?" : "") . "
+    GROUP BY year
+    ORDER BY year DESC
+    LIMIT 5";
+$yearProfitStmt = $db->prepare($yearProfitSql);
+$yearProfitStmt->execute($branchParams);
+$yearlyProfit = $yearProfitStmt->fetchAll();
+
+// Total profit all time
+$totalProfitSql = "SELECT 
+    COUNT(*) as count,
+    COALESCE(SUM(COALESCE(sold_price, selling_price)), 0) as revenue,
+    COALESCE(SUM(cost_price), 0) as cost,
+    COALESCE(SUM(COALESCE(sold_price, selling_price) - cost_price), 0) as profit
+    FROM vehicles
+    WHERE status = 'sold'" . ($isBranch ? " AND branch_id = ?" : "");
+$totalProfitStmt = $db->prepare($totalProfitSql);
+$totalProfitStmt->execute($branchParams);
+$totalProfit = $totalProfitStmt->fetch();
 
 // Recent vehicles (last 6 added)
 $recentSql = "SELECT v.*, b.name as branch_name, b.color as branch_color,
@@ -110,6 +149,11 @@ jsonResponse([
         'no_branch' => $noBranch,
     ],
     'values' => $values,
+    'profit' => [
+        'total' => $totalProfit,
+        'monthly' => $monthlyProfit,
+        'yearly' => $yearlyProfit
+    ],
     'by_branch' => $byBranch,
     'recent_vehicles' => $recentVehicles
 ]);

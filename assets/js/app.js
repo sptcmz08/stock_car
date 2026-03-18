@@ -125,9 +125,9 @@ async function loadDashboard() {
             <div class="hero-label">ขายแล้ว</div>
         </div>`;
 
-    // Financial Card
-    const potentialProfit = (parseFloat(v.stock_selling) || 0) - (parseFloat(v.stock_cost) || 0);
-    const soldProfit = (parseFloat(v.sold_revenue) || 0) - (parseFloat(v.sold_cost) || 0);
+    // Financial Card (simplified)
+    const tp = data.profit.total;
+    const totalProfit = parseFloat(tp.profit) || 0;
     document.getElementById('financialCard').innerHTML = `
         <div class="dashboard-title"><i class='bx bxs-wallet'></i> สรุปการเงิน</div>
         <div class="fin-item">
@@ -135,16 +135,8 @@ async function loadDashboard() {
             <div class="fin-value" style="color:#60a5fa;">${formatCurrency(v.stock_cost)}</div>
         </div>
         <div class="fin-item">
-            <div class="fin-label"><div class="fin-icon" style="background:rgba(16,185,129,0.15);color:#34d399;"><i class='bx bxs-dollar-circle'></i></div> มูลค่าขาย (ในสต็อก)</div>
-            <div class="fin-value" style="color:#34d399;">${formatCurrency(v.stock_selling)}</div>
-        </div>
-        <div class="fin-item">
-            <div class="fin-label"><div class="fin-icon" style="background:rgba(168,85,247,0.15);color:#c084fc;"><i class='bx bxs-bar-chart-alt-2'></i></div> กำไรที่คาดหวัง</div>
-            <div class="fin-value" style="color:${potentialProfit >= 0 ? '#c084fc' : '#f87171'};">${potentialProfit >= 0 ? '+' : ''}${formatCurrency(potentialProfit)}</div>
-        </div>
-        <div class="fin-item">
-            <div class="fin-label"><div class="fin-icon" style="background:rgba(249,115,22,0.15);color:#fb923c;"><i class='bx bxs-trophy'></i></div> กำไรจากการขาย</div>
-            <div class="fin-value" style="color:${soldProfit >= 0 ? '#fb923c' : '#f87171'};">${soldProfit >= 0 ? '+' : ''}${formatCurrency(soldProfit)}</div>
+            <div class="fin-label"><div class="fin-icon" style="background:rgba(249,115,22,0.15);color:#fb923c;"><i class='bx bxs-trophy'></i></div> กำไรรวม (${tp.count} คัน)</div>
+            <div class="fin-value" style="color:${totalProfit >= 0 ? '#fb923c' : '#f87171'};">${totalProfit >= 0 ? '+' : ''}${formatCurrency(totalProfit)}</div>
         </div>`;
 
     // Status Donut Chart
@@ -202,6 +194,46 @@ async function loadDashboard() {
                 </div>
             </div>`).join('') : '<p class="text-slate-500 text-sm text-center py-8">ยังไม่มีสาขา</p>'}`;
 
+    // Profit Summary (monthly/yearly)
+    const thaiMonths = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    document.getElementById('profitCard').innerHTML = `
+        <div class="dashboard-title"><i class='bx bxs-bar-chart-alt-2'></i> กำไรจากการขาย</div>
+        <div class="flex gap-2 mb-3">
+            <button class="filter-chip active" onclick="toggleProfitView('monthly', this)" data-pview="monthly">รายเดือน</button>
+            <button class="filter-chip" onclick="toggleProfitView('yearly', this)" data-pview="yearly">รายปี</button>
+        </div>
+        <div id="profitViewMonthly">
+            ${data.profit.monthly.length ? `<table style="width:100%;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">เดือน</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาทุน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
+                ${data.profit.monthly.map(m => {
+                    const [y, mon] = m.month.split('-');
+                    const profit = parseFloat(m.profit);
+                    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td class="py-2 text-sm">${thaiMonths[parseInt(mon)]} ${parseInt(y)+543}</td>
+                        <td class="text-right text-sm">${m.count}</td>
+                        <td class="text-right text-sm text-slate-400">${formatCurrency(m.cost)}</td>
+                        <td class="text-right text-sm text-blue-400">${formatCurrency(m.revenue)}</td>
+                        <td class="text-right text-sm font-bold" style="color:${profit >= 0 ? '#34d399' : '#f87171'};">${profit >= 0 ? '+' : ''}${formatCurrency(profit)}</td>
+                    </tr>`;
+                }).join('')}
+            </table>` : '<p class="text-slate-500 text-sm text-center py-6">ยังไม่มีข้อมูลการขาย</p>'}
+        </div>
+        <div id="profitViewYearly" style="display:none;">
+            ${data.profit.yearly.length ? `<table style="width:100%;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">ปี</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาทุน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
+                ${data.profit.yearly.map(y => {
+                    const profit = parseFloat(y.profit);
+                    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td class="py-2 text-sm">ปี ${parseInt(y.year)+543}</td>
+                        <td class="text-right text-sm">${y.count}</td>
+                        <td class="text-right text-sm text-slate-400">${formatCurrency(y.cost)}</td>
+                        <td class="text-right text-sm text-blue-400">${formatCurrency(y.revenue)}</td>
+                        <td class="text-right text-sm font-bold" style="color:${profit >= 0 ? '#34d399' : '#f87171'};">${profit >= 0 ? '+' : ''}${formatCurrency(profit)}</td>
+                    </tr>`;
+                }).join('')}
+            </table>` : '<p class="text-slate-500 text-sm text-center py-6">ยังไม่มีข้อมูลการขาย</p>'}
+        </div>`;
+
     // Recent Vehicles
     document.getElementById('recentCard').innerHTML = `
         <div class="dashboard-title"><i class='bx bxs-time-five'></i> รถที่เพิ่มล่าสุด</div>
@@ -219,6 +251,71 @@ async function loadDashboard() {
                     <div class="text-xs font-semibold mt-1 text-orange-300">${formatCurrency(v.selling_price)}</div>
                 </div>
             </div>`).join('') : '<p class="text-slate-500 text-sm text-center py-8">ยังไม่มีรถในสต็อก</p>'}`;
+}
+
+function toggleProfitView(view, btn) {
+    document.getElementById('profitViewMonthly').style.display = view === 'monthly' ? 'block' : 'none';
+    document.getElementById('profitViewYearly').style.display = view === 'yearly' ? 'block' : 'none';
+    document.querySelectorAll('[data-pview]').forEach(b => b.classList.toggle('active', b.dataset.pview === view));
+}
+
+function openCloseSaleModal(vehicleId, defaultPrice, costPrice) {
+    const modal = document.createElement('div'); modal.className = 'modal-overlay'; modal.id = 'closeSaleModal';
+    const today = new Date().toISOString().split('T')[0];
+    modal.innerHTML = `
+        <div class="modal-content p-6" style="max-width:420px;margin:auto;">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold">🎉 ปิดการขาย</h2>
+                <button onclick="closeModal('closeSaleModal')" class="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white/10"><i class='bx bx-x text-2xl'></i></button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">ราคาทุน</label>
+                <div class="text-lg font-bold text-blue-400 mb-2">${formatCurrency(costPrice)}</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">ราคาขายจริง</label>
+                <input id="closeSalePrice" type="text" inputmode="decimal" class="form-input" value="${formatNumber(defaultPrice)}" oninput="formatInputComma(this)">
+            </div>
+            <div class="mb-4">
+                <label class="form-label">วันที่ขาย</label>
+                <input id="closeSaleDate" type="date" class="form-input" value="${today}">
+            </div>
+            <div id="closeSaleProfit" class="glass-card-static p-3 mb-4 text-center">
+                <span class="text-sm text-slate-500">กำไร: </span>
+                <span class="text-lg font-bold" style="color:${(defaultPrice - costPrice) >= 0 ? '#34d399' : '#f87171'};">${(defaultPrice - costPrice) >= 0 ? '+' : ''}${formatCurrency(defaultPrice - costPrice)}</span>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('closeSaleModal')" class="btn-secondary flex-1 justify-center">ยกเลิก</button>
+                <button onclick="confirmCloseSale(${vehicleId}, ${costPrice})" class="btn-primary flex-1 justify-center" id="closeSaleBtn" style="background:linear-gradient(135deg, #10b981, #059669);">ยืนยันปิดการขาย</button>
+            </div>
+        </div>`;
+    document.getElementById('modalContainer').appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal('closeSaleModal'); });
+    // Live profit calc
+    document.getElementById('closeSalePrice').addEventListener('input', function() {
+        const sp = parseFloat(stripCommas(this.value)) || 0;
+        const profit = sp - costPrice;
+        document.getElementById('closeSaleProfit').innerHTML = `<span class="text-sm text-slate-500">กำไร: </span><span class="text-lg font-bold" style="color:${profit >= 0 ? '#34d399' : '#f87171'};">${profit >= 0 ? '+' : ''}${formatCurrency(profit)}</span>`;
+    });
+}
+
+async function confirmCloseSale(vehicleId, costPrice) {
+    const btn = document.getElementById('closeSaleBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+    const soldPrice = stripCommas(document.getElementById('closeSalePrice').value);
+    const soldDate = document.getElementById('closeSaleDate').value;
+    const result = await api('api/vehicles.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: vehicleId, status: 'sold', sold_price: soldPrice, sold_date: soldDate })
+    });
+    if (result.success) {
+        showToast('ปิดการขายเรียบร้อย! 🎉');
+        closeModal('closeSaleModal');
+        showVehicleDetail(vehicleId);
+    } else {
+        showToast(result.error || 'เกิดข้อผิดพลาด', 'error');
+        btn.disabled = false; btn.innerHTML = 'ยืนยันปิดการขาย';
+    }
 }
 
 function goToVehiclesWithStatus(status) {
@@ -356,7 +453,15 @@ async function showVehicleDetail(vehicleId) {
         </div>
         <div class="album-grid">${images.length ? images.map((img, i) => `<div class="album-photo" onclick="openLightbox(${i})"><img src="uploads/${img.filename}" alt="" loading="lazy"><button onclick="event.stopPropagation();deleteImage(${img.id})" class="album-photo-delete"><i class='bx bx-x'></i></button></div>`).join('') : `<div class="album-empty" onclick="document.getElementById('albumUploadInput').click()"><i class='bx bx-camera text-4xl text-orange-400/30'></i><p class="text-sm text-slate-500 mt-2">แตะเพื่อเพิ่มรูปภาพ</p></div>`}</div>
         <div class="px-4 pb-6">
-            <div class="glass-card-static p-4 mb-4"><div class="flex items-center justify-between"><div><div class="text-xs text-slate-500">ราคาขาย</div><div class="text-xl font-bold text-orange-400">${formatCurrency(v.selling_price)}</div></div><div class="text-right">${getStatusBadge(v.status)}</div></div></div>
+            <div class="glass-card-static p-4 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div><div class="text-xs text-slate-500">ราคาทุน</div><div class="text-lg font-bold text-blue-400">${formatCurrency(v.cost_price)}</div></div>
+                    <div class="text-center"><div class="text-xs text-slate-500">ราคาขาย</div><div class="text-lg font-bold text-orange-400">${formatCurrency(v.selling_price)}</div></div>
+                    <div class="text-right">${getStatusBadge(v.status)}</div>
+                </div>
+                ${v.status === 'sold' && v.sold_price ? `<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.08);"><div class="flex items-center justify-between"><div><span class="text-xs text-slate-500">ขายจริง</span> <span class="text-sm font-bold text-green-400">${formatCurrency(v.sold_price)}</span></div><div><span class="text-xs text-slate-500">กำไร</span> <span class="text-sm font-bold" style="color:${(v.sold_price - v.cost_price) >= 0 ? '#34d399' : '#f87171'};">${(v.sold_price - v.cost_price) >= 0 ? '+' : ''}${formatCurrency(v.sold_price - v.cost_price)}</span></div></div>${v.sold_date ? `<div class="text-xs text-slate-500 mt-1">วันที่ปิดการขาย: ${v.sold_date}</div>` : ''}</div>` : ''}
+            </div>
+            ${v.status !== 'sold' ? `<button onclick="openCloseSaleModal(${v.id}, ${v.selling_price || 0}, ${v.cost_price || 0})" class="w-full mb-4 py-3 px-4 rounded-xl font-bold text-center text-white cursor-pointer border-0" style="background:linear-gradient(135deg, #10b981, #059669);font-family:inherit;font-size:15px;"><i class='bx bxs-badge-check'></i> ปิดการขาย</button>` : ''}
             <div class="glass-card-static p-4 mb-4">
                 <h3 class="font-bold text-sm mb-3 text-slate-400">ข้อมูลรถ</h3>
                 <div class="info-row"><span class="info-label">ทะเบียน</span><span class="info-value">${v.license_plate || '-'}</span></div>
@@ -443,7 +548,7 @@ function closeLightbox() { const lb = document.getElementById('lightboxOverlay')
 function openVehicleModal(editId) {
     const isEdit = !!editId;
     const modal = document.createElement('div'); modal.className = 'modal-overlay'; modal.id = 'vehicleModal';
-    let formData = { brand: '', model: '', year: new Date().getFullYear(), color: '', vin: '', license_plate: '', mileage: 0, selling_price: 0, branch_id: '', status: 'available', notes: '' };
+    let formData = { brand: '', model: '', year: new Date().getFullYear(), color: '', vin: '', license_plate: '', mileage: 0, cost_price: 0, selling_price: 0, branch_id: '', status: 'available', notes: '' };
 
     const populateAndShow = (data) => {
         if (data) formData = { ...formData, ...data };
@@ -464,7 +569,10 @@ function openVehicleModal(editId) {
                     <div><label class="form-label">เลขตัวถัง (VIN)</label><input name="vin" class="form-input" value="${escapeHtml(formData.vin)}"></div>
                     <div><label class="form-label">ทะเบียน</label><input name="license_plate" class="form-input" value="${escapeHtml(formData.license_plate)}"></div>
                 </div>
-                <div class="mb-3"><label class="form-label">ราคาขาย</label><input name="selling_price" type="text" inputmode="decimal" class="form-input" value="${formatNumber(formData.selling_price)}" oninput="formatInputComma(this)"></div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div><label class="form-label">ราคาทุน</label><input name="cost_price" type="text" inputmode="decimal" class="form-input" value="${formatNumber(formData.cost_price)}" oninput="formatInputComma(this)"></div>
+                    <div><label class="form-label">ราคาขาย</label><input name="selling_price" type="text" inputmode="decimal" class="form-input" value="${formatNumber(formData.selling_price)}" oninput="formatInputComma(this)"></div>
+                </div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div><label class="form-label">สาขา</label><select name="branch_id" class="form-select" id="modalBranch"><option value="">-- ไม่ระบุ --</option></select></div>
                     <div><label class="form-label">สถานะ</label><select name="status" class="form-select">${Object.entries(STATUS_MAP).map(([k, s]) => `<option value="${k}" ${formData.status === k ? 'selected' : ''}>${s.label}</option>`).join('')}</select></div>
@@ -496,12 +604,13 @@ async function submitVehicle(event, editId) {
         const fd = new FormData(form), payload = { id: editId };
         for (const [key, value] of fd.entries()) { if (key !== 'images') payload[key] = value; }
         if (payload.mileage) payload.mileage = stripCommas(payload.mileage);
+        if (payload.cost_price) payload.cost_price = stripCommas(payload.cost_price);
         if (payload.selling_price) payload.selling_price = stripCommas(payload.selling_price);
         const result = await api('api/vehicles.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (result.success) { showToast(result.message); closeModal('vehicleModal'); if (currentPage === 'detail') showVehicleDetail(editId); else loadVehicles(); }
         else { showToast(result.error || 'เกิดข้อผิดพลาด', 'error'); btn.disabled = false; btn.innerHTML = 'บันทึก'; }
     } else {
-        const fd = new FormData(form); fd.set('mileage', stripCommas(fd.get('mileage'))); fd.set('selling_price', stripCommas(fd.get('selling_price')));
+        const fd = new FormData(form); fd.set('mileage', stripCommas(fd.get('mileage'))); fd.set('cost_price', stripCommas(fd.get('cost_price'))); fd.set('selling_price', stripCommas(fd.get('selling_price')));
         const fileInput = document.getElementById('vehicleImages');
         if (fileInput && fileInput.files.length) { fd.delete('images'); for (const f of fileInput.files) fd.append('images[]', f); }
         const result = await api('api/vehicles.php', { method: 'POST', body: fd });

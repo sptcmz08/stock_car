@@ -155,6 +155,11 @@ $isAdmin = ($role === 'admin');
                 <!-- Filled by JS -->
             </div>
 
+            <!-- Profit Summary -->
+            <div class="dash-card mb-6" id="profitCard">
+                <!-- Filled by JS -->
+            </div>
+
             <!-- Recent Vehicles -->
             <div class="dash-card" id="recentCard">
                 <!-- Filled by JS -->
