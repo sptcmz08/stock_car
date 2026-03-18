@@ -83,6 +83,22 @@ $valueStmt->execute($branchParams);
 $values = $valueStmt->fetch();
 
 // Profit summary: sold vehicles with sold_date
+// Daily profit (last 30 days)
+$dailySql = "SELECT 
+    DATE_FORMAT(COALESCE(sold_date, updated_at), '%Y-%m-%d') as day,
+    COUNT(*) as count,
+    COALESCE(SUM(COALESCE(sold_price, selling_price)), 0) as revenue,
+    COALESCE(SUM(cost_price), 0) as cost,
+    COALESCE(SUM(COALESCE(sold_price, selling_price) - cost_price), 0) as profit
+    FROM vehicles
+    WHERE status = 'sold'" . ($isBranch ? " AND branch_id = ?" : "") . "
+    GROUP BY day
+    ORDER BY day DESC
+    LIMIT 30";
+$dailyStmt = $db->prepare($dailySql);
+$dailyStmt->execute($branchParams);
+$dailyProfit = $dailyStmt->fetchAll();
+
 // Monthly profit (last 12 months)
 $profitSql = "SELECT 
     DATE_FORMAT(COALESCE(sold_date, updated_at), '%Y-%m') as month,
@@ -151,6 +167,7 @@ jsonResponse([
     'values' => $values,
     'profit' => [
         'total' => $totalProfit,
+        'daily' => $dailyProfit,
         'monthly' => $monthlyProfit,
         'yearly' => $yearlyProfit
     ],

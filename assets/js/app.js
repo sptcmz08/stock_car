@@ -199,12 +199,29 @@ async function loadDashboard() {
     document.getElementById('profitCard').innerHTML = `
         <div class="dashboard-title"><i class='bx bxs-bar-chart-alt-2'></i> กำไรจากการขาย</div>
         <div class="flex gap-2 mb-3">
-            <button class="filter-chip active" onclick="toggleProfitView('monthly', this)" data-pview="monthly">รายเดือน</button>
+            <button class="filter-chip active" onclick="toggleProfitView('daily', this)" data-pview="daily">รายวัน</button>
+            <button class="filter-chip" onclick="toggleProfitView('monthly', this)" data-pview="monthly">รายเดือน</button>
             <button class="filter-chip" onclick="toggleProfitView('yearly', this)" data-pview="yearly">รายปี</button>
         </div>
-        <div id="profitViewMonthly">
+        <div id="profitViewDaily">
+            ${data.profit.daily.length ? `<table style="width:100%;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">วันที่</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ทุน</th><th class="text-right text-xs text-slate-500 pb-2">ขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
+                ${data.profit.daily.map(d => {
+                    const [y, mon, day] = d.day.split('-');
+                    const profit = parseFloat(d.profit);
+                    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td class="py-2 text-sm">${parseInt(day)}/${parseInt(mon)}/${parseInt(y)+543}</td>
+                        <td class="text-right text-sm">${d.count}</td>
+                        <td class="text-right text-sm text-slate-400">${formatCurrency(d.cost)}</td>
+                        <td class="text-right text-sm text-blue-400">${formatCurrency(d.revenue)}</td>
+                        <td class="text-right text-sm font-bold" style="color:${profit >= 0 ? '#34d399' : '#f87171'};">${profit >= 0 ? '+' : ''}${formatCurrency(profit)}</td>
+                    </tr>`;
+                }).join('')}
+            </table>` : '<p class="text-slate-500 text-sm text-center py-6">ยังไม่มีข้อมูลการขาย</p>'}
+        </div>
+        <div id="profitViewMonthly" style="display:none;">
             ${data.profit.monthly.length ? `<table style="width:100%;border-collapse:collapse;">
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">เดือน</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาทุน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">เดือน</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ทุน</th><th class="text-right text-xs text-slate-500 pb-2">ขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
                 ${data.profit.monthly.map(m => {
                     const [y, mon] = m.month.split('-');
                     const profit = parseFloat(m.profit);
@@ -220,7 +237,7 @@ async function loadDashboard() {
         </div>
         <div id="profitViewYearly" style="display:none;">
             ${data.profit.yearly.length ? `<table style="width:100%;border-collapse:collapse;">
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">ปี</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาทุน</th><th class="text-right text-xs text-slate-500 pb-2">ราคาขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th class="text-left text-xs text-slate-500 pb-2">ปี</th><th class="text-right text-xs text-slate-500 pb-2">คัน</th><th class="text-right text-xs text-slate-500 pb-2">ทุน</th><th class="text-right text-xs text-slate-500 pb-2">ขาย</th><th class="text-right text-xs text-slate-500 pb-2">กำไร</th></tr>
                 ${data.profit.yearly.map(y => {
                     const profit = parseFloat(y.profit);
                     return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -254,6 +271,7 @@ async function loadDashboard() {
 }
 
 function toggleProfitView(view, btn) {
+    document.getElementById('profitViewDaily').style.display = view === 'daily' ? 'block' : 'none';
     document.getElementById('profitViewMonthly').style.display = view === 'monthly' ? 'block' : 'none';
     document.getElementById('profitViewYearly').style.display = view === 'yearly' ? 'block' : 'none';
     document.querySelectorAll('[data-pview]').forEach(b => b.classList.toggle('active', b.dataset.pview === view));
