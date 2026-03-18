@@ -4,6 +4,10 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
+$role = $_SESSION['role'] ?? 'admin';
+$displayName = $_SESSION['display_name'] ?? $_SESSION['username'] ?? 'User';
+$branchName = $_SESSION['branch_name'] ?? null;
+$isAdmin = ($role === 'admin');
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -20,146 +24,153 @@ if (!isset($_SESSION['user_id'])) {
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=9">
+    <link rel="stylesheet" href="assets/css/style.css?v=20">
 </head>
 <body>
-    <!-- ===== Top Header ===== -->
-    <header class="top-header flex items-center justify-between px-4 lg:px-8">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-lg font-bold" style="background: var(--accent-gradient);">
-                <i class='bx bxs-car'></i>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold gradient-text leading-tight">Dara Autocar</h1>
-                <p class="text-xs text-slate-500 hidden sm:block">ระบบสต็อกรถยนต์</p>
+    <!-- Pass user info to JS -->
+    <script>
+        window.APP_USER = {
+            id: <?= (int)$_SESSION['user_id'] ?>,
+            username: "<?= htmlspecialchars($_SESSION['username'] ?? '') ?>",
+            role: "<?= htmlspecialchars($role) ?>",
+            branch_id: <?= $_SESSION['branch_id'] ? (int)$_SESSION['branch_id'] : 'null' ?>,
+            display_name: "<?= htmlspecialchars($displayName) ?>",
+            branch_name: <?= $branchName ? '"' . htmlspecialchars($branchName) . '"' : 'null' ?>,
+            is_admin: <?= $isAdmin ? 'true' : 'false' ?>
+        };
+    </script>
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">
+                    <i class='bx bxs-car'></i>
+                </div>
+                <div class="sidebar-logo-text">
+                    <h1 class="gradient-text">Dara Autocar</h1>
+                    <p>ระบบสต็อกรถยนต์</p>
+                </div>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <!-- Desktop Nav -->
-            <nav class="hidden md:flex items-center gap-1" id="desktopNav">
-                <button onclick="navigateTo('dashboard')" class="nav-btn active px-4 py-2 rounded-xl text-sm font-medium transition-all" data-page="dashboard">
-                    <i class='bx bxs-dashboard mr-1'></i> แดชบอร์ด
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-group">
+                <span class="sidebar-nav-label">เมนูหลัก</span>
+                <a class="sidebar-link active" onclick="navigateTo('dashboard')" data-page="dashboard">
+                    <i class='bx bxs-dashboard'></i>
+                    <span>แดชบอร์ด</span>
+                </a>
+                <a class="sidebar-link" onclick="navigateTo('vehicles')" data-page="vehicles">
+                    <i class='bx bxs-car'></i>
+                    <span>รถยนต์</span>
+                </a>
+            </div>
+
+            <?php if ($isAdmin): ?>
+            <div class="sidebar-nav-group">
+                <span class="sidebar-nav-label">จัดการระบบ</span>
+                <a class="sidebar-link" onclick="navigateTo('branches')" data-page="branches">
+                    <i class='bx bxs-map'></i>
+                    <span>จัดการสาขา</span>
+                </a>
+                <a class="sidebar-link" onclick="navigateTo('users')" data-page="users">
+                    <i class='bx bxs-user-account'></i>
+                    <span>จัดการผู้ใช้</span>
+                </a>
+            </div>
+            <?php endif; ?>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    <i class='bx bxs-user'></i>
+                </div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name"><?= htmlspecialchars($displayName) ?></div>
+                    <div class="sidebar-user-role">
+                        <?php if ($isAdmin): ?>
+                            <span class="role-badge role-admin">Admin</span>
+                        <?php else: ?>
+                            <span class="role-badge role-branch"><?= htmlspecialchars($branchName ?? 'สาขา') ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <button onclick="logout()" class="sidebar-logout-btn" title="ออกจากระบบ">
+                    <i class='bx bx-log-out'></i>
                 </button>
-                <button onclick="navigateTo('vehicles')" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all" data-page="vehicles">
-                    <i class='bx bxs-car mr-1'></i> รถยนต์
-                </button>
-                <button onclick="navigateTo('branches')" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium transition-all" data-page="branches">
-                    <i class='bx bxs-map mr-1'></i> สาขา
-                </button>
-            </nav>
-            <button onclick="openVehicleModal()" class="hidden md:flex btn-primary !py-2 !px-4 !text-sm !rounded-xl">
-                <i class='bx bx-plus'></i> เพิ่มรถ
-            </button>
-            <button onclick="logout()" class="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-slate-400 hover:text-red-400" title="ออกจากระบบ">
-                <i class='bx bx-log-out text-xl'></i>
-            </button>
+            </div>
         </div>
+    </aside>
+
+    <!-- ===== Sidebar Overlay (Mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- ===== Top Bar (Mobile) ===== -->
+    <header class="topbar" id="topbar">
+        <button class="topbar-menu-btn" onclick="toggleSidebar()">
+            <i class='bx bx-menu'></i>
+        </button>
+        <div class="topbar-title">
+            <h1 class="gradient-text">Dara Autocar</h1>
+        </div>
+        <button onclick="openVehicleModal()" class="topbar-action-btn" title="เพิ่มรถ">
+            <i class='bx bx-plus'></i>
+        </button>
     </header>
 
     <!-- ===== Main Content ===== -->
-    <main class="main-content px-4 lg:px-8 max-w-7xl mx-auto">
+    <main class="main-area" id="mainArea">
 
         <!-- Dashboard Section -->
         <section id="page-dashboard" class="page-section active">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold">แดชบอร์ด</h2>
-                <p class="text-slate-500 text-sm mt-1">ภาพรวมสต็อกรถยนต์</p>
-            </div>
-            
-            <!-- Advanced Search -->
-            <div class="glass-card-static p-5 mb-6">
-                <h3 class="text-base font-bold mb-4 flex items-center gap-2">
-                    <i class='bx bx-search-alt text-orange-400'></i> ค้นหาอย่างละเอียด
-                </h3>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="form-label">ยี่ห้อ</label>
-                        <select id="advBrand" class="form-select" onchange="onAdvBrandChange()">
-                            <option value="">-- ทุกยี่ห้อ --</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">รุ่น</label>
-                        <select id="advModel" class="form-select">
-                            <option value="">-- ทุกรุ่น --</option>
-                        </select>
-                    </div>
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">แดชบอร์ด</h2>
+                    <p class="page-subtitle" id="dashboardSubtitle">ภาพรวมสต็อกรถยนต์<?= $branchName ? ' — ' . htmlspecialchars($branchName) : '' ?></p>
                 </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="form-label">ปีเริ่มต้น</label>
-                        <select id="advYearMin" class="form-select">
-                            <option value="">-- ไม่ระบุ --</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">ปีสิ้นสุด</label>
-                        <select id="advYearMax" class="form-select">
-                            <option value="">-- ไม่ระบุ --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                        <label class="form-label">สาขา</label>
-                        <select id="advBranch" class="form-select">
-                            <option value="">-- ทุกสาขา --</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">สถานะ</label>
-                        <select id="advStatus" class="form-select">
-                            <option value="">-- ทั้งหมด --</option>
-                            <option value="available">🟢 พร้อมขาย</option>
-                            <option value="reserved">🟡 จอง</option>
-                            <option value="sold">🔴 ขายแล้ว</option>
-                            <option value="maintenance">🔵 ซ่อม</option>
-                        </select>
-                    </div>
-                </div>
-                <button onclick="advancedSearch()" class="btn-primary w-full justify-center">
-                    <i class='bx bx-search'></i> ค้นหา
+                <button onclick="openVehicleModal()" class="btn-primary !py-2 !px-4 !text-sm !rounded-xl hidden md:inline-flex">
+                    <i class='bx bx-plus'></i> เพิ่มรถ
                 </button>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="statsGrid">
-                <!-- Filled by JS -->
-            </div>
-            
-            <!-- Financial Summary -->
-            <div class="glass-card-static p-5 mb-6" id="financialSummary">
+            <!-- Hero Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="heroStats">
                 <!-- Filled by JS -->
             </div>
 
-            <!-- Branch Breakdown -->
-            <div class="glass-card-static p-5 mb-6">
-                <h3 class="text-base font-bold mb-4 flex items-center gap-2">
-                    <i class='bx bxs-map text-orange-400'></i> สต็อกแยกตามสาขา
-                </h3>
-                <div id="branchBreakdown">
+            <!-- Financial & Status Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                <div class="dash-card" id="financialCard">
                     <!-- Filled by JS -->
                 </div>
+                <div class="dash-card" id="statusChart">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Branch Breakdown (Admin only shows full) -->
+            <div class="dash-card mb-6" id="branchCard">
+                <!-- Filled by JS -->
             </div>
 
             <!-- Recent Vehicles -->
-            <div class="glass-card-static p-5">
-                <h3 class="text-base font-bold mb-4 flex items-center gap-2">
-                    <i class='bx bxs-time-five text-orange-400'></i> รถที่เพิ่มล่าสุด
-                </h3>
-                <div id="recentVehicles">
-                    <!-- Filled by JS -->
-                </div>
+            <div class="dash-card" id="recentCard">
+                <!-- Filled by JS -->
             </div>
         </section>
 
         <!-- Vehicles Section -->
         <section id="page-vehicles" class="page-section">
-            <div class="flex items-center justify-between mb-4">
+            <div class="page-header">
                 <div>
-                    <h2 class="text-2xl font-bold">รถยนต์</h2>
-                    <p class="text-slate-500 text-sm mt-1" id="vehicleCount">กำลังโหลด...</p>
+                    <h2 class="page-title">รถยนต์</h2>
+                    <p class="page-subtitle" id="vehicleCount">กำลังโหลด...</p>
                 </div>
+                <button onclick="openVehicleModal()" class="btn-primary !py-2 !px-4 !text-sm !rounded-xl hidden md:inline-flex">
+                    <i class='bx bx-plus'></i> เพิ่มรถ
+                </button>
             </div>
 
             <!-- Search & Filters -->
@@ -194,14 +205,15 @@ if (!isset($_SESSION['user_id'])) {
             </div>
         </section>
 
-        <!-- Branches Section -->
+        <!-- Branches Section (Admin Only) -->
+        <?php if ($isAdmin): ?>
         <section id="page-branches" class="page-section">
-            <div class="flex items-center justify-between mb-6">
+            <div class="page-header">
                 <div>
-                    <h2 class="text-2xl font-bold">จัดการสาขา</h2>
-                    <p class="text-slate-500 text-sm mt-1">เพิ่ม แก้ไข หรือลบสาขา</p>
+                    <h2 class="page-title">จัดการสาขา</h2>
+                    <p class="page-subtitle">เพิ่ม แก้ไข หรือลบสาขา</p>
                 </div>
-                <button onclick="openBranchModal()" class="btn-primary !py-2 !px-4 !text-sm">
+                <button onclick="openBranchModal()" class="btn-primary !py-2 !px-4 !text-sm !rounded-xl">
                     <i class='bx bx-plus'></i> เพิ่มสาขา
                 </button>
             </div>
@@ -209,6 +221,23 @@ if (!isset($_SESSION['user_id'])) {
                 <!-- Filled by JS -->
             </div>
         </section>
+
+        <!-- Users Section (Admin Only) -->
+        <section id="page-users" class="page-section">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">จัดการผู้ใช้</h2>
+                    <p class="page-subtitle">เพิ่ม แก้ไข หรือลบผู้ใช้สาขา</p>
+                </div>
+                <button onclick="openUserModal()" class="btn-primary !py-2 !px-4 !text-sm !rounded-xl">
+                    <i class='bx bx-plus'></i> เพิ่มผู้ใช้
+                </button>
+            </div>
+            <div id="userList">
+                <!-- Filled by JS -->
+            </div>
+        </section>
+        <?php endif; ?>
     </main>
 
     <!-- ===== Bottom Navigation (Mobile) ===== -->
@@ -221,10 +250,16 @@ if (!isset($_SESSION['user_id'])) {
             <i class='bx bxs-car'></i>
             <span>รถยนต์</span>
         </a>
+        <?php if ($isAdmin): ?>
         <a class="nav-item" onclick="navigateTo('branches')" data-page="branches">
             <i class='bx bxs-map'></i>
             <span>สาขา</span>
         </a>
+        <a class="nav-item" onclick="navigateTo('users')" data-page="users">
+            <i class='bx bxs-user-account'></i>
+            <span>ผู้ใช้</span>
+        </a>
+        <?php endif; ?>
     </nav>
 
     <!-- ===== FAB (Mobile) ===== -->
@@ -239,6 +274,6 @@ if (!isset($_SESSION['user_id'])) {
     <div id="modalContainer"></div>
 
     <!-- ===== App JS ===== -->
-    <script src="assets/js/app.js?v=11"></script>
+    <script src="assets/js/app.js?v=20"></script>
 </body>
 </html>

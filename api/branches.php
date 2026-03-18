@@ -13,6 +13,10 @@ if (!isset($_SESSION['user_id'])) {
     jsonResponse(['error' => 'Unauthorized'], 401);
 }
 
+$userRole = $_SESSION['role'] ?? 'admin';
+$userBranchId = $_SESSION['branch_id'] ?? null;
+$isBranchUser = ($userRole === 'branch' && $userBranchId);
+
 header('Content-Type: application/json; charset=utf-8');
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -22,12 +26,15 @@ switch ($method) {
         getBranches();
         break;
     case 'POST':
+        if ($isBranchUser) jsonResponse(['error' => 'Forbidden'], 403);
         createBranch();
         break;
     case 'PUT':
+        if ($isBranchUser) jsonResponse(['error' => 'Forbidden'], 403);
         updateBranch();
         break;
     case 'DELETE':
+        if ($isBranchUser) jsonResponse(['error' => 'Forbidden'], 403);
         deleteBranch();
         break;
     default:
@@ -35,14 +42,26 @@ switch ($method) {
 }
 
 function getBranches() {
+    global $isBranchUser, $userBranchId;
     $db = getDB();
     
-    $stmt = $db->query("SELECT b.*, 
+    if ($isBranchUser) {
+        $stmt = $db->prepare("SELECT b.*, 
+                        (SELECT COUNT(*) FROM vehicles WHERE branch_id = b.id) as vehicle_count,
+                        (SELECT COUNT(*) FROM vehicles WHERE branch_id = b.id AND status = 'available') as available_count,
+                        (SELECT COUNT(*) FROM vehicles WHERE branch_id = b.id AND status = 'sold') as sold_count
+                        FROM branches b 
+                        WHERE b.id = ?
+                        ORDER BY b.sort_order ASC, b.name ASC");
+        $stmt->execute([$userBranchId]);
+    } else {
+        $stmt = $db->query("SELECT b.*, 
                         (SELECT COUNT(*) FROM vehicles WHERE branch_id = b.id) as vehicle_count,
                         (SELECT COUNT(*) FROM vehicles WHERE branch_id = b.id AND status = 'available') as available_count,
                         (SELECT COUNT(*) FROM vehicles WHERE branch_id = b.id AND status = 'sold') as sold_count
                         FROM branches b 
                         ORDER BY b.sort_order ASC, b.name ASC");
+    }
     $branches = $stmt->fetchAll();
     
     jsonResponse([

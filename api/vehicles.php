@@ -14,6 +14,10 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$userRole = $_SESSION['role'] ?? 'admin';
+$userBranchId = $_SESSION['branch_id'] ?? null;
+$isBranchUser = ($userRole === 'branch' && $userBranchId);
+
 header('Content-Type: application/json; charset=utf-8');
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -81,7 +85,11 @@ function getVehicles() {
         $params[] = $_GET['status'];
     }
     
-    if (!empty($_GET['branch_id'])) {
+    // Branch scoping: branch users always filter to their branch
+    if ($GLOBALS['isBranchUser']) {
+        $where[] = "v.branch_id = ?";
+        $params[] = (int)$GLOBALS['userBranchId'];
+    } elseif (!empty($_GET['branch_id'])) {
         $where[] = "v.branch_id = ?";
         $params[] = (int)$_GET['branch_id'];
     }
@@ -155,7 +163,12 @@ function createVehicle() {
     $mileage = (int)($_POST['mileage'] ?? 0);
     $cost_price = (float)($_POST['cost_price'] ?? 0);
     $selling_price = (float)($_POST['selling_price'] ?? 0);
-    $branch_id = !empty($_POST['branch_id']) ? (int)$_POST['branch_id'] : null;
+    // Branch users always assign to their own branch
+    if ($GLOBALS['isBranchUser']) {
+        $branch_id = (int)$GLOBALS['userBranchId'];
+    } else {
+        $branch_id = !empty($_POST['branch_id']) ? (int)$_POST['branch_id'] : null;
+    }
     $status = $_POST['status'] ?? 'available';
     $validStatuses = ['available', 'reserved', 'sold', 'maintenance'];
     if (!in_array($status, $validStatuses)) $status = 'available';
