@@ -279,6 +279,6 @@ $isAdmin = ($role === 'admin');
     <div id="modalContainer"></div>
 
     <!-- ===== App JS ===== -->
-    <script src="assets/js/app.js?v=20"></script>
+    <script src="assets/js/app.js?v=21"></script>
 </body>
 </html>
