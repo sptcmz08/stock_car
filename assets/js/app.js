@@ -269,8 +269,8 @@ async function loadDashboard() {
                 </div>
             </div>`).join('') : '<p class="text-slate-500 text-sm text-center py-8">ยังไม่มีรถในสต็อก</p>'}`;
 
-    // Load branch filters for dashboard search
-    loadDashboardBranchFilters();
+    // Populate dashboard search dropdowns
+    populateDashboardDropdowns();
 }
 
 function toggleProfitView(view, btn) {
@@ -837,53 +837,109 @@ function closeModal(id) {
 }
 
 // ===== DASHBOARD SEARCH =====
-let dashboardSearchTimeout = null;
-let dashboardFilters = { search: '', status: '', branch_id: '' };
+let dsAllBrands = [];
+let dsAllModels = [];
+let dsAllYears = [];
+let dsVehiclesCache = [];
 
-function debounceSearchDashboard() {
-    clearTimeout(dashboardSearchTimeout);
-    dashboardSearchTimeout = setTimeout(() => {
-        dashboardFilters.search = document.getElementById('dashboardSearchInput').value;
-        loadDashboardSearch();
-    }, 400);
+async function populateDashboardDropdowns() {
+    // Fetch all vehicles data to get brands, models, years
+    const data = await api('api/vehicles.php');
+    if (!data.success) return;
+
+    dsAllBrands = data.brands || [];
+    dsAllModels = data.models || [];
+    dsAllYears = data.years || [];
+    dsVehiclesCache = data.vehicles || [];
+
+    // Populate brand dropdown
+    const brandSel = document.getElementById('dsBrand');
+    if (brandSel) {
+        brandSel.innerHTML = '<option value="">-- ทุกยี่ห้อ --</option>' +
+            dsAllBrands.map(b => `<option value="${b}">${b}</option>`).join('');
+    }
+
+    // Populate model dropdown (all models initially)
+    populateDsModels('');
+
+    // Populate year dropdowns
+    const yearMinSel = document.getElementById('dsYearMin');
+    const yearMaxSel = document.getElementById('dsYearMax');
+    if (yearMinSel && yearMaxSel) {
+        const yearOpts = dsAllYears.map(y => `<option value="${y}">${parseInt(y)+543}</option>`).join('');
+        yearMinSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + yearOpts;
+        yearMaxSel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + yearOpts;
+    }
+
+    // Populate branch dropdown
+    if (!allBranches.length) {
+        const branchData = await api('api/branches.php');
+        if (branchData.success) allBranches = branchData.branches;
+    }
+    const branchSel = document.getElementById('dsBranch');
+    if (branchSel && allBranches.length && USER.is_admin) {
+        branchSel.innerHTML = '<option value="">ทุกสาขา --</option>' +
+            allBranches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    }
 }
 
-function dashboardFilterByStatus(status) {
-    dashboardFilters.status = status;
-    document.querySelectorAll('#dashboardStatusFilters .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === status));
-    loadDashboardSearch();
+function populateDsModels(selectedBrand) {
+    const modelSel = document.getElementById('dsModel');
+    if (!modelSel) return;
+
+    if (selectedBrand) {
+        // Get models only for the selected brand
+        const filteredModels = [...new Set(dsVehiclesCache.filter(v => v.brand === selectedBrand).map(v => v.model))].sort();
+        modelSel.innerHTML = '<option value="">-- ทุกรุ่น --</option>' +
+            filteredModels.map(m => `<option value="${m}">${m}</option>`).join('');
+    } else {
+        modelSel.innerHTML = '<option value="">-- ทุกรุ่น --</option>' +
+            dsAllModels.map(m => `<option value="${m}">${m}</option>`).join('');
+    }
 }
 
-function dashboardFilterByBranch(branchId) {
-    dashboardFilters.branch_id = branchId;
-    loadDashboardBranchFilters();
-    loadDashboardSearch();
+function onDsBrandChange() {
+    const brand = document.getElementById('dsBrand').value;
+    populateDsModels(brand);
 }
 
-function clearDashboardSearch() {
-    dashboardFilters = { search: '', status: '', branch_id: '' };
-    document.getElementById('dashboardSearchInput').value = '';
-    document.querySelectorAll('#dashboardStatusFilters .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === ''));
-    document.getElementById('dashboardSearchResults').style.display = 'none';
-    loadDashboardBranchFilters();
-}
-
-async function loadDashboardSearch() {
-    const hasFilter = dashboardFilters.search || dashboardFilters.status || dashboardFilters.branch_id;
-    const resultsDiv = document.getElementById('dashboardSearchResults');
-    if (!hasFilter) { resultsDiv.style.display = 'none'; return; }
+async function executeDashboardSearch() {
+    const brand = document.getElementById('dsBrand')?.value || '';
+    const model = document.getElementById('dsModel')?.value || '';
+    const yearMin = document.getElementById('dsYearMin')?.value || '';
+    const yearMax = document.getElementById('dsYearMax')?.value || '';
+    const branchId = document.getElementById('dsBranch')?.value || '';
+    const status = document.getElementById('dsStatus')?.value || '';
 
     const params = new URLSearchParams();
-    if (dashboardFilters.search) params.set('search', dashboardFilters.search);
-    if (dashboardFilters.status) params.set('status', dashboardFilters.status);
-    if (dashboardFilters.branch_id) params.set('branch_id', dashboardFilters.branch_id);
+    if (brand) params.set('brand', brand);
+    if (model) params.set('model', model);
+    if (yearMin) params.set('year_min', yearMin);
+    if (yearMax) params.set('year_max', yearMax);
+    if (branchId) params.set('branch_id', branchId);
+    if (status) params.set('status', status);
 
     const data = await api('api/vehicles.php?' + params.toString());
     if (!data.success) return;
 
+    const resultsDiv = document.getElementById('dashboardSearchResults');
     resultsDiv.style.display = 'block';
     document.getElementById('dashboardSearchCount').textContent = `(${data.total} คัน)`;
     renderDashboardVehicleGrid(data.vehicles);
+
+    // Smooth scroll to results
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearDashboardSearch() {
+    document.getElementById('dsBrand').value = '';
+    document.getElementById('dsModel').value = '';
+    document.getElementById('dsYearMin').value = '';
+    document.getElementById('dsYearMax').value = '';
+    document.getElementById('dsBranch').value = '';
+    document.getElementById('dsStatus').value = '';
+    populateDsModels('');
+    document.getElementById('dashboardSearchResults').style.display = 'none';
 }
 
 function renderDashboardVehicleGrid(vehicles) {
@@ -920,20 +976,6 @@ function renderDashboardVehicleGrid(vehicles) {
     startCardSliders();
 }
 
-async function loadDashboardBranchFilters() {
-    if (!allBranches.length) {
-        const branchData = await api('api/branches.php');
-        if (branchData.success) allBranches = branchData.branches;
-    }
-    if (allBranches.length && USER.is_admin) {
-        document.getElementById('dashboardBranchFilters').innerHTML = `
-            <button class="filter-chip ${!dashboardFilters.branch_id ? 'active' : ''}" onclick="dashboardFilterByBranch('')">ทุกสาขา</button>
-            ${allBranches.map(b => `
-                <button class="filter-chip ${dashboardFilters.branch_id == b.id ? 'active' : ''}" onclick="dashboardFilterByBranch('${b.id}')" style="${dashboardFilters.branch_id == b.id ? `background:${b.color};border-color:${b.color};color:white;` : ''}">
-                    ${b.name}
-                </button>`).join('')}`;
-    }
-}
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {

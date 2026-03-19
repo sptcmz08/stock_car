@@ -24,7 +24,7 @@ $isAdmin = ($role === 'admin');
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=21">
+    <link rel="stylesheet" href="assets/css/style.css?v=22">
 </head>
 <body>
     <!-- Pass user info to JS -->
@@ -135,23 +135,58 @@ $isAdmin = ($role === 'admin');
                 </button>
             </div>
 
-            <!-- Search & Filters (Dashboard) -->
-            <div class="mb-6">
-                <div class="search-bar mb-3">
-                    <i class='bx bx-search'></i>
-                    <input type="text" id="dashboardSearchInput" class="form-input" placeholder="ค้นหายี่ห้อ, รุ่น, ทะเบียน, VIN..." oninput="debounceSearchDashboard()">
+            <!-- Search Form (Dashboard) -->
+            <div class="dash-card mb-6" id="dashboardSearchCard">
+                <div class="dashboard-title"><i class='bx bx-search'></i> ค้นหารถยนต์</div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="form-label">ยี่ห้อ</label>
+                        <select id="dsBrand" class="form-select" onchange="onDsBrandChange()">
+                            <option value="">-- ทุกยี่ห้อ --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">รุ่น</label>
+                        <select id="dsModel" class="form-select">
+                            <option value="">-- ทุกรุ่น --</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="flex gap-2 overflow-x-auto pb-2" id="dashboardStatusFilters">
-                    <button class="filter-chip active" onclick="dashboardFilterByStatus('')" data-status="">ทั้งหมด</button>
-                    <button class="filter-chip" onclick="dashboardFilterByStatus('available')" data-status="available">🟢 พร้อมขาย</button>
-                    <button class="filter-chip" onclick="dashboardFilterByStatus('reserved')" data-status="reserved">🟡 จอง</button>
-                    <button class="filter-chip" onclick="dashboardFilterByStatus('sold')" data-status="sold">🔴 ขายแล้ว</button>
-                    <button class="filter-chip" onclick="dashboardFilterByStatus('maintenance')" data-status="maintenance">🔵 ซ่อม</button>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="form-label">ปีเริ่มต้น</label>
+                        <select id="dsYearMin" class="form-select">
+                            <option value="">-- ไม่ระบุ --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">ปีสิ้นสุด</label>
+                        <select id="dsYearMax" class="form-select">
+                            <option value="">-- ไม่ระบุ --</option>
+                        </select>
+                    </div>
                 </div>
-                <!-- Branch Filter -->
-                <div class="flex gap-2 overflow-x-auto pb-2 mt-2" id="dashboardBranchFilters">
-                    <!-- Filled by JS -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="form-label">สาขา</label>
+                        <select id="dsBranch" class="form-select">
+                            <option value="">ทุกสาขา --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">สถานะ</label>
+                        <select id="dsStatus" class="form-select">
+                            <option value="">-- ทั้งหมด --</option>
+                            <option value="available">🟢 พร้อมขาย</option>
+                            <option value="reserved">🟡 จอง</option>
+                            <option value="sold">🔴 ขายแล้ว</option>
+                            <option value="maintenance">🔵 ซ่อม</option>
+                        </select>
+                    </div>
                 </div>
+                <button onclick="executeDashboardSearch()" class="ds-search-btn">
+                    <i class='bx bx-search'></i> ค้นหา
+                </button>
             </div>
 
             <!-- Search Results (Dashboard) -->
@@ -166,6 +201,7 @@ $isAdmin = ($role === 'admin');
                     </div>
                 </div>
             </div>
+
 
             <!-- Hero Stats -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="heroStats">
@@ -311,6 +347,6 @@ $isAdmin = ($role === 'admin');
     <div id="modalContainer"></div>
 
     <!-- ===== App JS ===== -->
-    <script src="assets/js/app.js?v=23"></script>
+    <script src="assets/js/app.js?v=24"></script>
 </body>
 </html>

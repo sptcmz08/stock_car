@@ -1399,3 +1399,37 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     display: flex;
     gap: 8px;
 }
+
+/* ===== Dashboard Search Button ===== */
+.ds-search-btn {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 14px;
+    background: var(--accent-gradient);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+}
+
+.ds-search-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 30px rgba(249, 115, 22, 0.4);
+}
+
+.ds-search-btn:active {
+    transform: translateY(0);
+}
+
+.ds-search-btn i {
+    font-size: 20px;
+}
