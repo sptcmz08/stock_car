@@ -268,6 +268,9 @@ async function loadDashboard() {
                     <div class="text-xs font-semibold mt-1 text-orange-300">${formatCurrency(v.selling_price)}</div>
                 </div>
             </div>`).join('') : '<p class="text-slate-500 text-sm text-center py-8">ยังไม่มีรถในสต็อก</p>'}`;
+
+    // Load branch filters for dashboard search
+    loadDashboardBranchFilters();
 }
 
 function toggleProfitView(view, btn) {
@@ -831,6 +834,105 @@ function confirmDeleteUser(id, name) {
 function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) { modal.style.opacity = '0'; modal.style.transition = 'opacity 0.2s ease'; setTimeout(() => { modal.remove(); if (!document.querySelector('.modal-overlay')) document.body.style.overflow = ''; }, 200); }
+}
+
+// ===== DASHBOARD SEARCH =====
+let dashboardSearchTimeout = null;
+let dashboardFilters = { search: '', status: '', branch_id: '' };
+
+function debounceSearchDashboard() {
+    clearTimeout(dashboardSearchTimeout);
+    dashboardSearchTimeout = setTimeout(() => {
+        dashboardFilters.search = document.getElementById('dashboardSearchInput').value;
+        loadDashboardSearch();
+    }, 400);
+}
+
+function dashboardFilterByStatus(status) {
+    dashboardFilters.status = status;
+    document.querySelectorAll('#dashboardStatusFilters .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === status));
+    loadDashboardSearch();
+}
+
+function dashboardFilterByBranch(branchId) {
+    dashboardFilters.branch_id = branchId;
+    loadDashboardBranchFilters();
+    loadDashboardSearch();
+}
+
+function clearDashboardSearch() {
+    dashboardFilters = { search: '', status: '', branch_id: '' };
+    document.getElementById('dashboardSearchInput').value = '';
+    document.querySelectorAll('#dashboardStatusFilters .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === ''));
+    document.getElementById('dashboardSearchResults').style.display = 'none';
+    loadDashboardBranchFilters();
+}
+
+async function loadDashboardSearch() {
+    const hasFilter = dashboardFilters.search || dashboardFilters.status || dashboardFilters.branch_id;
+    const resultsDiv = document.getElementById('dashboardSearchResults');
+    if (!hasFilter) { resultsDiv.style.display = 'none'; return; }
+
+    const params = new URLSearchParams();
+    if (dashboardFilters.search) params.set('search', dashboardFilters.search);
+    if (dashboardFilters.status) params.set('status', dashboardFilters.status);
+    if (dashboardFilters.branch_id) params.set('branch_id', dashboardFilters.branch_id);
+
+    const data = await api('api/vehicles.php?' + params.toString());
+    if (!data.success) return;
+
+    resultsDiv.style.display = 'block';
+    document.getElementById('dashboardSearchCount').textContent = `(${data.total} คัน)`;
+    renderDashboardVehicleGrid(data.vehicles);
+}
+
+function renderDashboardVehicleGrid(vehicles) {
+    const grid = document.getElementById('dashboardVehicleGrid');
+    if (!vehicles.length) {
+        grid.innerHTML = `<div class="empty-state col-span-full" style="padding:30px 20px;"><i class='bx bxs-car'></i><p class="text-lg font-semibold mb-1">ไม่พบรถยนต์</p><p class="text-sm">ลองเปลี่ยนตัวกรอง หรือค้นหาใหม่</p></div>`;
+        return;
+    }
+    grid.innerHTML = vehicles.map((v, i) => {
+        const hasMultiImg = v.images && v.images.length > 1;
+        const imgHtml = v.images && v.images.length
+            ? `<div class="card-slider" data-vid="d${v.id}">
+                ${v.images.map((img, idx) => `<img src="uploads/${img.filename}" class="card-slide ${idx === 0 ? 'active' : ''}" alt="" loading="lazy">`).join('')}
+                ${hasMultiImg ? `<div class="card-dots">${v.images.map((_, idx) => `<span class="card-dot ${idx === 0 ? 'active' : ''}"></span>`).join('')}</div>` : ''}
+               </div>`
+            : `<div class="no-image"><i class='bx bxs-car'></i></div>`;
+        const branchTag = v.branch_name ? `<span class="branch-tag" style="background:${v.branch_color}20;color:${v.branch_color};font-size:11px;"><i class='bx bxs-map-pin'></i> ${v.branch_name}</span>` : '';
+        return `
+        <div class="glass-card vehicle-card cursor-pointer" onclick="navigateTo('detail', ${v.id})" style="animation-delay:${i * 0.05}s">
+            <div class="relative overflow-hidden">
+                ${imgHtml}
+                <div class="absolute top-3 left-3">${getStatusBadge(v.status)}</div>
+            </div>
+            <div class="p-4">
+                <div class="flex items-start justify-between mb-1"><h3 class="font-bold text-base">${v.brand} ${v.model}</h3><span class="text-xs text-slate-500">${v.year}</span></div>
+                <div class="flex items-center gap-2 mb-2">${branchTag}${v.color ? `<span class="text-xs text-slate-500">${v.color}</span>` : ''}</div>
+                <div class="flex items-center justify-between">
+                    <div><div class="text-xs text-slate-500">ราคาขาย</div><div class="text-lg font-bold gradient-text">${formatCurrency(v.selling_price)}</div></div>
+                    ${v.license_plate ? `<div class="text-right"><div class="text-xs text-slate-500">ทะเบียน</div><div class="text-sm font-semibold">${v.license_plate}</div></div>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    startCardSliders();
+}
+
+async function loadDashboardBranchFilters() {
+    if (!allBranches.length) {
+        const branchData = await api('api/branches.php');
+        if (branchData.success) allBranches = branchData.branches;
+    }
+    if (allBranches.length && USER.is_admin) {
+        document.getElementById('dashboardBranchFilters').innerHTML = `
+            <button class="filter-chip ${!dashboardFilters.branch_id ? 'active' : ''}" onclick="dashboardFilterByBranch('')">ทุกสาขา</button>
+            ${allBranches.map(b => `
+                <button class="filter-chip ${dashboardFilters.branch_id == b.id ? 'active' : ''}" onclick="dashboardFilterByBranch('${b.id}')" style="${dashboardFilters.branch_id == b.id ? `background:${b.color};border-color:${b.color};color:white;` : ''}">
+                    ${b.name}
+                </button>`).join('')}`;
+    }
 }
 
 // ===== INITIALIZATION =====

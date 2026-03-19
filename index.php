@@ -24,7 +24,7 @@ $isAdmin = ($role === 'admin');
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=20">
+    <link rel="stylesheet" href="assets/css/style.css?v=21">
 </head>
 <body>
     <!-- Pass user info to JS -->
@@ -133,6 +133,38 @@ $isAdmin = ($role === 'admin');
                 <button onclick="openVehicleModal()" class="btn-primary !py-2 !px-4 !text-sm !rounded-xl hidden md:inline-flex">
                     <i class='bx bx-plus'></i> เพิ่มรถ
                 </button>
+            </div>
+
+            <!-- Search & Filters (Dashboard) -->
+            <div class="mb-6">
+                <div class="search-bar mb-3">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="dashboardSearchInput" class="form-input" placeholder="ค้นหายี่ห้อ, รุ่น, ทะเบียน, VIN..." oninput="debounceSearchDashboard()">
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2" id="dashboardStatusFilters">
+                    <button class="filter-chip active" onclick="dashboardFilterByStatus('')" data-status="">ทั้งหมด</button>
+                    <button class="filter-chip" onclick="dashboardFilterByStatus('available')" data-status="available">🟢 พร้อมขาย</button>
+                    <button class="filter-chip" onclick="dashboardFilterByStatus('reserved')" data-status="reserved">🟡 จอง</button>
+                    <button class="filter-chip" onclick="dashboardFilterByStatus('sold')" data-status="sold">🔴 ขายแล้ว</button>
+                    <button class="filter-chip" onclick="dashboardFilterByStatus('maintenance')" data-status="maintenance">🔵 ซ่อม</button>
+                </div>
+                <!-- Branch Filter -->
+                <div class="flex gap-2 overflow-x-auto pb-2 mt-2" id="dashboardBranchFilters">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Search Results (Dashboard) -->
+            <div id="dashboardSearchResults" class="mb-6" style="display:none;">
+                <div class="dash-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="dashboard-title" style="margin-bottom:0;"><i class='bx bx-search'></i> ผลการค้นหา <span id="dashboardSearchCount" class="text-sm text-slate-500"></span></div>
+                        <button onclick="clearDashboardSearch()" class="text-xs text-orange-400 hover:text-orange-300 cursor-pointer" style="background:none;border:none;font-family:inherit;">ล้างการค้นหา</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboardVehicleGrid">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
             </div>
 
             <!-- Hero Stats -->
@@ -279,6 +311,6 @@ $isAdmin = ($role === 'admin');
     <div id="modalContainer"></div>
 
     <!-- ===== App JS ===== -->
-    <script src="assets/js/app.js?v=22"></script>
+    <script src="assets/js/app.js?v=23"></script>
 </body>
 </html>
